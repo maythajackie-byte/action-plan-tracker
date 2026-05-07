@@ -121,7 +121,7 @@ with st.sidebar:
         except: st.session_state.edit_mode = False
 
     with st.form("action_form"):
-        s_opts = ["Planning", "In Progress", "Completed", "Delayed"]
+        s_opts = ["Planning", "In Progress", "Completed", "Delayed", "On Hold", "Canceled"]
         f_status = st.selectbox("Status", s_opts, index=s_opts.index(str(dv["Status"])) if str(dv["Status"]) in s_opts else 0)
         f_dept = st.selectbox("Department", list(DEPT_COLORS.keys()), index=list(DEPT_COLORS.keys()).index(str(dv["Dept"])) if str(dv["Dept"]) in DEPT_COLORS else 0)
         f_activity = st.text_area("Action Plan & Activity", value=str(dv["Activity"]))
@@ -135,7 +135,7 @@ with st.sidebar:
         f_start = cd[0].date_input("Start Date", value=dv["Start Date"])
         f_end = cd[1].date_input("End Date", value=dv["End Date"])
         if st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True):
-            auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
+            auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25, "On Hold": 10, "Canceled": 0 }
             final_prog = dv['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
             new_row = {"Dept": f_dept, "Activity": f_activity, "Sales PIC": f_sales_val, "Eng PIC": f_eng_val, "Status": f_status, "Progress": final_prog, "Start Date": f_start, "End Date": f_end, "Priority": f_priority, "Project Status": f_pstat}
             if st.session_state.edit_mode: df.iloc[st.session_state.edit_index] = new_row; st.session_state.edit_mode = False
