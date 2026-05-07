@@ -36,8 +36,8 @@ def save_data(df):
 df = load_data()
 
 # 3. ส่วนหัวข้อ (Header)
-st.title("📂 2026 Company & Department Action Plan")
-st.subheader("Engineer Center Dashboard")
+st.title("📋 2026 Follow up & Action Plan")
+st.subheader("Project Dashboard")
 
 # 4. ส่วนการกรอกข้อมูล (Sidebar) - ปรับตามหัวข้อในภาพ
 with st.sidebar:
