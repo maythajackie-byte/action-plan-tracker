@@ -28,7 +28,7 @@ DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
-# 3. จัดการข้อมูล
+# 3. จัดการข้อมูลแบบปลอดภัย (Safe Loading)
 DATA_FILE = "action_plan_2026.csv"
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -37,9 +37,9 @@ def load_data():
             cols = ["Sales PIC", "Eng PIC", "Priority", "Project Status", "Dept", "Activity", "Progress", "Status", "Start Date", "End Date"]
             for col in cols:
                 if col not in df_loaded.columns: df_loaded[col] = "None"
-            df_loaded['Start Date'] = pd.to_datetime(df_loaded['Start Date']).dt.date
-            df_loaded['End Date'] = pd.to_datetime(df_loaded['End Date']).dt.date
-            return df_loaded
+            df_loaded['Start Date'] = pd.to_datetime(df_loaded['Start Date'], errors='coerce').dt.date
+            df_loaded['End Date'] = pd.to_datetime(df_loaded['End Date'], errors='coerce').dt.date
+            return df_loaded.fillna("None")
         except:
             return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
@@ -59,7 +59,7 @@ st.image("https://squarespace-cdn.com", use_container_width=True)
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
-    m2.metric("📈 ความคืบหน้าเฉลี่ย", f"{df['Progress'].mean():.1f}%")
+    m2.metric("📈 ความคืบหน้าเฉลี่ย", f"{pd.to_numeric(df['Progress'], errors='coerce').mean():.1f}%")
     m3.metric("🚨 งานด่วนพิเศษ (P0)", f"{len(df[df['Project Status'] == 'P0'])} รายการ")
     
     st.markdown("---")
@@ -78,7 +78,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 5. Sidebar (แก้จุด Error และปุ่มบันทึก)
+# 5. Sidebar (แก้ไขให้ปุ่มไม่หาย และ Error ไม่เกิด)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -86,45 +86,49 @@ with st.sidebar:
             
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     
-    # ดึงค่าเริ่มต้นมาเตรียมไว้ (Safe Mode)
-    def_vals = {"Status": "Planning", "Dept": "Distri-Pro", "Activity": "", "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date()}
+    # เตรียมค่าเริ่มต้นแบบปลอดภัย
+    default_data = {
+        "Status": "Planning", "Dept": "Distri-Pro", "Activity": "", 
+        "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", 
+        "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date()
+    }
     
     if st.session_state.edit_mode and st.session_state.edit_index is not None:
         try:
-            row = df.iloc[st.session_state.edit_index]
-            for key in def_vals.keys():
-                if key in row: def_vals[key] = row[key]
+            row_data = df.iloc[st.session_state.edit_index]
+            for key in default_data:
+                if key in row_data: default_data[key] = row_data[key]
         except:
             st.session_state.edit_mode = False
 
+    # สร้าง Form แบบมีปุ่ม Submit ชัดเจน
     with st.form("action_form"):
         status_opts = ["Planning", "In Progress", "Completed", "Delayed"]
-        f_status = st.selectbox("Status", status_opts, index=status_opts.index(def_vals["Status"]) if def_vals["Status"] in status_opts else 0)
+        f_status = st.selectbox("Status", status_opts, index=status_opts.index(default_data["Status"]) if default_data["Status"] in status_opts else 0)
         
         dept_list = list(DEPT_COLORS.keys())
-        f_dept = st.selectbox("Department", dept_list, index=dept_list.index(def_vals["Dept"]) if def_vals["Dept"] in dept_list else 0)
+        f_dept = st.selectbox("Department", dept_list, index=dept_list.index(default_data["Dept"]) if default_data["Dept"] in dept_list else 0)
         
-        f_activity = st.text_area("Action Plan & Activity", value=def_vals["Activity"])
+        f_activity = st.text_area("Action Plan & Activity", value=default_data["Activity"])
         
-        c_p = st.columns(2)
-        f_sales = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(def_vals["Sales PIC"]) if def_vals["Sales PIC"] in SALES_LIST else 0)
-        f_eng = c_p.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(def_vals["Eng PIC"]) if def_vals["Eng PIC"] in ENG_LIST else 0)
+        col_pic = st.columns(2)
+        f_sales = col_pic[0].selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(default_data["Sales PIC"]) if default_data["Sales PIC"] in SALES_LIST else 0)
+        f_eng = col_pic[1].selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(default_data["Eng PIC"]) if default_data["Eng PIC"] in ENG_LIST else 0)
         
-        c_i = st.columns(2)
+        col_prio = st.columns(2)
         prio_opts = ["High", "Medium", "Low"]
-        f_priority = c_i.selectbox("Priority", prio_opts, index=prio_opts.index(def_vals["Priority"]) if def_vals["Priority"] in prio_opts else 1)
+        f_priority = col_prio[0].selectbox("Priority", prio_opts, index=prio_opts.index(default_data["Priority"]) if default_data["Priority"] in prio_opts else 1)
         pstat_opts = ["P0", "P1", "P2", "P3"]
-        f_pstat = c_i.selectbox("Project Status", pstat_opts, index=pstat_opts.index(def_vals["Project Status"]) if def_vals["Project Status"] in pstat_opts else 1)
+        f_pstat = col_prio[1].selectbox("Project Status", pstat_opts, index=pstat_opts.index(default_data["Project Status"]) if default_data["Project Status"] in pstat_opts else 1)
         
-        c_d = st.columns(2)
-        f_start = c_d.date_input("Start Date", value=def_vals["Start Date"])
-        f_end = c_d.date_input("End Date", value=def_vals["End Date"])
+        col_date = st.columns(2)
+        f_start = col_date[0].date_input("Start Date", value=default_data["Start Date"])
+        f_end = col_date[1].date_input("End Date", value=default_data["End Date"])
 
-        # ปุ่มบันทึกข้อมูล (ต้องอยู่ท้ายสุดในฟอร์ม)
+        # ปุ่มบันทึก (ต้องอยู่ข้างใน st.form)
         submitted = st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True)
         
         if submitted:
-            # Auto-Progress logic
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
             final_progress = df.iloc[st.session_state.edit_index]['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
             
@@ -136,7 +140,6 @@ with st.sidebar:
             else:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df)
-            st.success("บันทึกสำเร็จ!")
             st.rerun()
 
 # 6. รายละเอียดแผนงาน
