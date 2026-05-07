@@ -72,7 +72,7 @@ if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
 # 4. ส่วนหัวข้อ
 c1, c2 = st.columns([0.1, 0.9])
-with c1: st.image("https://flaticon.com", width=70)
+with c1: st.image("https://images.squarespace-cdn.com/content/v1/6022f791cf4a4d20ccfcd9c4/1720041912442-BKASDM2GXDEANYX4LG4Q/Capture.PNG", width=1200)
 with c2: st.title("2026 Follow up & Action Plan")
 
 # 5. Metrics สรุปผล
@@ -90,7 +90,7 @@ with st.sidebar:
     val = df.iloc[st.session_state.edit_index] if st.session_state.edit_mode else None
     
     with st.form("action_form", clear_on_submit=True):
-        dept = st.selectbox("Department", ["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"],
+        dept = st.selectbox("Department", ["Distri-Pro", "Post", "Broadcast", "Residential", "Center"],
                             index=["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"].index(val['Dept']) if val is not None else 0)
         activity = st.text_area("Action Plan & Activity", value=val['Activity'] if val is not None else "")
         
