@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี (คงเดิมตาม Master Code) ---
+# --- ปรับแต่ง CSS (คงเดิมตาม Master Code) ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
@@ -20,7 +20,17 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. รายชื่อพนักงาน (คงเดิม)
+# --- 2. กำหนดสีประจำแผนกตามรูปภาพ (Color Map) ---
+DEPT_COLORS = {
+    "Distri-Pro": "#3498db",    # สีฟ้า
+    "Post": "#8e44ad",          # สีม่วง
+    "Broadcast": "#27ae60",     # สีเขียว
+    "Residential": "#f39c12",   # สีส้ม (เผื่อไว้)
+    "Cinema": "#e74c3c",        # สีแดง (เผื่อไว้)
+    "ENG-Center": "#2c3e50"     # สีเทาเข้ม (เผื่อไว้)
+}
+
+# รายชื่อพนักงาน (คงเดิม)
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
@@ -34,7 +44,7 @@ def load_data():
         df_loaded['Start Date'] = pd.to_datetime(df_loaded['Start Date']).dt.date
         df_loaded['End Date'] = pd.to_datetime(df_loaded['End Date']).dt.date
         return df_loaded
-    return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status", "Target", "Support"])
+    return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
 def save_data(df_to_save):
     df_to_save.to_csv(DATA_FILE, index=False)
@@ -49,7 +59,7 @@ c1, c2 = st.columns([0.1, 0.9])
 with c1: st.image("https://flaticon.com", width=70)
 with c2: st.title("2026 Follow up & Action Plan")
 
-# 5. Metrics สรุปผล
+# 5. Metrics (คงเดิม)
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
@@ -63,7 +73,7 @@ with st.sidebar:
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     val = df.iloc[st.session_state.edit_index] if st.session_state.edit_mode else None
     with st.form("action_form", clear_on_submit=True):
-        dept = st.selectbox("Department", ["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"], index=["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"].index(val['Dept']) if val is not None else 0)
+        dept = st.selectbox("Department", list(DEPT_COLORS.keys()), index=list(DEPT_COLORS.keys()).index(val['Dept']) if val is not None else 0)
         activity = st.text_area("Action Plan & Activity", value=val['Activity'] if val is not None else "")
         c_p1, c_p2 = st.columns(2)
         sales_p = c_p1.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(val['Sales PIC']) if val is not None else 0)
@@ -77,57 +87,43 @@ with st.sidebar:
         status = st.selectbox("Status", ["Planning", "In Progress", "Completed", "Delayed"], index=["Planning", "In Progress", "Completed", "Delayed"].index(val['Status']) if val is not None else 0)
         progress = st.slider("Progress (%)", 0, 100, int(val['Progress']) if val is not None else 0)
         if st.form_submit_button("💾 บันทึกข้อมูล"):
-            new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": progress, "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status, "Target": "-", "Support": "-"}
+            new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": progress, "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status}
             if st.session_state.edit_mode: df.iloc[st.session_state.edit_index] = new_row; st.session_state.edit_mode = False
             else: df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df); st.rerun()
 
-# 7. --- ฟีเจอร์ใหม่: ระบบค้นหาและตัวกรอง (Filter Section) ---
+# 7. กราฟ (เน้นการใช้สีตามแผนกที่กำหนด)
 if not df.empty:
-    st.subheader("🔍 ค้นหาและตัวกรอง (Filters)")
-    c_f1, c_f2, c_f3 = st.columns(3)
-    
-    search_query = c_f1.text_input("🔎 ค้นหาชื่องาน/โปรเจกต์", placeholder="พิมพ์คำที่ต้องการค้นหา...")
-    filter_dept = c_f2.multiselect("🏢 เลือกแผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
-    filter_pstatus = c_f3.multiselect("🚨 สถานะ P-Status", options=["P0", "P1", "P2", "P3"], default=["P0", "P1", "P2", "P3"])
-
-    # การประมวลผลตัวกรอง
-    filtered_df = df[
-        (df["Activity"].str.contains(search_query, case=False, na=False)) &
-        (df["Dept"].isin(filter_dept)) &
-        (df["Project Status"].isin(filter_pstatus))
-    ]
-
-    # 8. กราฟ (ใช้ข้อมูลที่กรองแล้ว)
-    col_g1, col_g2 = st.columns([2, 1])
+    col_g1, col_g2 = st.columns()
     with col_g1:
-        st.subheader("📈 Timeline")
-        fig = px.timeline(filtered_df, x_start="Start Date", x_end="End Date", y="Activity", color="Project Status", text="Progress", color_discrete_map={"P0":"#e74c3c", "P1":"#e67e22", "P2":"#3498db", "P3":"#2ecc71"})
+        st.subheader("📈 Timeline (แยกตามแผนก)")
+        # เปลี่ยน color เป็น Dept เพื่อให้เห็นสีตามที่เลือก
+        fig = px.timeline(df, x_start="Start Date", x_end="End Date", y="Activity", 
+                          color="Dept", text="Progress", 
+                          color_discrete_map=DEPT_COLORS) # ใช้สีที่เรากำหนดไว้
         fig.update_yaxes(autorange="reversed")
         st.plotly_chart(fig, use_container_width=True)
     with col_g2:
         st.subheader("📊 สัดส่วนตามแผนก")
-        st.plotly_chart(px.pie(filtered_df, names="Dept", hole=0.4), use_container_width=True)
+        # ใช้สีที่เรากำหนดไว้ในกราฟวงกลมด้วย
+        st.plotly_chart(px.pie(df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS), use_container_width=True)
 
     st.markdown("---")
-    st.subheader(f"📄 รายละเอียดแผนงาน ({len(filtered_df)} รายการที่พบ)")
-    
-    # 9. ตารางรายละเอียด (ใช้ข้อมูลที่กรองแล้ว)
-    for index, row in filtered_df.iterrows():
-        # ต้องใช้ index จริงจาก df หลักสำหรับการแก้ไข/ลบ
-        original_index = df.index[df['Activity'] == row['Activity']].tolist()[0]
-        
+    st.subheader("📄 รายละเอียดแผนงาน")
+    for index, row in df.iterrows():
+        # กำหนดสีขอบของ Expander ตามสีแผนก
+        d_color = DEPT_COLORS.get(row['Dept'], "#0b5345")
         with st.expander(f"📌 [{row['Project Status']}] {row['Dept']} | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."):
-            ca, cb, cc = st.columns([2, 1, 1])
+            ca, cb, cc = st.columns()
             with ca: st.write(f"**กิจกรรม:** {row['Activity']}")
             with cb:
                 st.write(f"**Progress:** {row['Progress']}%")
                 if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
-                    st.session_state.edit_index = original_index
+                    st.session_state.edit_index = index
                     st.session_state.edit_mode = True; st.rerun()
             with cc:
                 st.write(f"**Status:** {row['Status']}")
                 if st.button(f"🗑️ ลบ", key=f"dl_{index}"):
-                    df = df.drop(original_index); save_data(df); st.rerun()
+                    df = df.drop(index); save_data(df); st.rerun()
 else:
     st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
