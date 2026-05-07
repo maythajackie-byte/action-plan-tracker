@@ -52,13 +52,11 @@ if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
 # --- 4. ส่วนหัวของหน้าเว็บ (หน้าปก และ Title) ---
-st.image("https://squarespace-cdn.com", use_container_width=True)
+st.image("https://images.squarespace-cdn.com/content/v1/6022f791cf4a4d20ccfcd9c4/1720041912442-BKASDM2GXDEANYX4LG4Q/Capture.PNG", use_container_width=20)
 
-col_t1, col_t2 = st.columns([0.1, 0.9])
-with col_t1:
-    st.image("https://flaticon.com", width=70)
-with col_t2:
-    st.title("2026 Follow up & Action Plan")
+c_t1, c_t2 = st.columns([0.1, 0.9])
+with c_t1: st.image("https://flaticon.com", width=70)
+with c_t2: st.title("2026 Follow up & Action Plan")
 
 # 5. ส่วนสรุปภาพรวม (Metrics & Graphs)
 if not df.empty:
