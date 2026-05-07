@@ -7,52 +7,28 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี (Sidebar เขียว, กล่อง Metric และ Dropdown ขาวสะอาด) ---
+# --- CSS ปรับแต่งสี (คงเดิมตาม Master Code) ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
     [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label { color: white !important; }
-    
-    /* ปรับแต่งกล่อง Metric (3 กรอบขาว) */
-    [data-testid="stMetric"] {
-        background-color: #ffffff !important;
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 8px solid #0b5345;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
+    [data-testid="stMetric"] { background-color: #ffffff !important; padding: 20px; border-radius: 12px; border-left: 8px solid #0b5345; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     [data-testid="stMetricLabel"] { color: #0b5345 !important; font-size: 1.1rem !important; font-weight: 600 !important; }
     [data-testid="stMetricValue"] { color: #1a1a1a !important; font-weight: bold !important; }
-
-    /* ปรับแต่งกล่องรายการ (Expander) ให้เป็นสีขาวอ่านง่าย */
-    div[data-testid="stExpander"] {
-        background-color: white !important;
-        border: 1px solid #0b5345 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-    }
+    div[data-testid="stExpander"] { background-color: white !important; border: 1px solid #0b5345 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; }
     div[data-testid="stExpander"] p { color: #0b5345 !important; font-weight: bold !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. รายชื่อพนักงาน
+# 2. รายชื่อพนักงาน (คงเดิม)
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
-ENG_LIST = [
-    "None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", 
-    "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop",
-    "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit",
-    "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan",
-    "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee",
-    "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak",
-    "PL : Preecha", "NC : Nattipong"
-]
+ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
-# 3. จัดการข้อมูล (แก้จุดที่ Error)
+# 3. จัดการข้อมูล
 DATA_FILE = "action_plan_2026.csv"
 def load_data():
     if os.path.exists(DATA_FILE):
         df_loaded = pd.read_csv(DATA_FILE)
-        # ตรวจสอบคอลัมน์สำคัญ
         for col in ["Sales PIC", "Eng PIC", "Priority", "Project Status", "Dept", "Activity", "Progress", "Status", "Start Date", "End Date"]:
             if col not in df_loaded.columns: df_loaded[col] = "None"
         df_loaded['Start Date'] = pd.to_datetime(df_loaded['Start Date']).dt.date
@@ -63,16 +39,14 @@ def load_data():
 def save_data(df_to_save):
     df_to_save.to_csv(DATA_FILE, index=False)
 
-# เรียกใช้ตัวแปร df ให้ระบบรู้จัก
 df = load_data()
 
-# Session State สำหรับการแก้ไข
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
 # 4. ส่วนหัวข้อ
 c1, c2 = st.columns([0.1, 0.9])
-with c1: st.image("https://images.squarespace-cdn.com/content/v1/6022f791cf4a4d20ccfcd9c4/1720041912442-BKASDM2GXDEANYX4LG4Q/Capture.PNG", width=1200)
+with c1: st.image("https://flaticon.com", width=70)
 with c2: st.title("2026 Follow up & Action Plan")
 
 # 5. Metrics สรุปผล
@@ -84,69 +58,76 @@ if not df.empty:
 
 st.markdown("---")
 
-# 6. Sidebar (Input Form)
+# 6. Sidebar (Input Form - คงเดิม)
 with st.sidebar:
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     val = df.iloc[st.session_state.edit_index] if st.session_state.edit_mode else None
-    
     with st.form("action_form", clear_on_submit=True):
-        dept = st.selectbox("Department", ["Distri-Pro", "Post", "Broadcast", "Residential", "Center"],
-                            index=["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"].index(val['Dept']) if val is not None else 0)
+        dept = st.selectbox("Department", ["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"], index=["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"].index(val['Dept']) if val is not None else 0)
         activity = st.text_area("Action Plan & Activity", value=val['Activity'] if val is not None else "")
-        
         c_p1, c_p2 = st.columns(2)
         sales_p = c_p1.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(val['Sales PIC']) if val is not None else 0)
         eng_p = c_p2.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(val['Eng PIC']) if val is not None else 0)
-        
         c_s1, c_s2 = st.columns(2)
         priority = c_s1.selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(val['Priority']) if val is not None else 1)
         p_status = c_s2.selectbox("Project Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(val['Project Status']) if val is not None else 1)
-        
         c_d1, c_d2 = st.columns(2)
         start_d = c_d1.date_input("Start Date", value=val['Start Date'] if val is not None else datetime.now().date())
         end_d = c_d2.date_input("End Date", value=val['End Date'] if val is not None else datetime.now().date())
-        
         status = st.selectbox("Status", ["Planning", "In Progress", "Completed", "Delayed"], index=["Planning", "In Progress", "Completed", "Delayed"].index(val['Status']) if val is not None else 0)
         progress = st.slider("Progress (%)", 0, 100, int(val['Progress']) if val is not None else 0)
-        
         if st.form_submit_button("💾 บันทึกข้อมูล"):
-            new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": progress, 
-                       "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status, "Target": "-", "Support": "-"}
-            if st.session_state.edit_mode:
-                df.iloc[st.session_state.edit_index] = new_row
-                st.session_state.edit_mode = False
-            else:
-                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-            save_data(df)
-            st.rerun()
+            new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": progress, "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status, "Target": "-", "Support": "-"}
+            if st.session_state.edit_mode: df.iloc[st.session_state.edit_index] = new_row; st.session_state.edit_mode = False
+            else: df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            save_data(df); st.rerun()
 
-# 7. กราฟและรายการ
+# 7. --- ฟีเจอร์ใหม่: ระบบค้นหาและตัวกรอง (Filter Section) ---
 if not df.empty:
+    st.subheader("🔍 ค้นหาและตัวกรอง (Filters)")
+    c_f1, c_f2, c_f3 = st.columns(3)
+    
+    search_query = c_f1.text_input("🔎 ค้นหาชื่องาน/โปรเจกต์", placeholder="พิมพ์คำที่ต้องการค้นหา...")
+    filter_dept = c_f2.multiselect("🏢 เลือกแผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
+    filter_pstatus = c_f3.multiselect("🚨 สถานะ P-Status", options=["P0", "P1", "P2", "P3"], default=["P0", "P1", "P2", "P3"])
+
+    # การประมวลผลตัวกรอง
+    filtered_df = df[
+        (df["Activity"].str.contains(search_query, case=False, na=False)) &
+        (df["Dept"].isin(filter_dept)) &
+        (df["Project Status"].isin(filter_pstatus))
+    ]
+
+    # 8. กราฟ (ใช้ข้อมูลที่กรองแล้ว)
     col_g1, col_g2 = st.columns([2, 1])
     with col_g1:
         st.subheader("📈 Timeline")
-        fig = px.timeline(df, x_start="Start Date", x_end="End Date", y="Activity", color="Project Status", color_discrete_map={"P0":"#e74c3c", "P1":"#e67e22", "P2":"#3498db", "P3":"#2ecc71"})
+        fig = px.timeline(filtered_df, x_start="Start Date", x_end="End Date", y="Activity", color="Project Status", text="Progress", color_discrete_map={"P0":"#e74c3c", "P1":"#e67e22", "P2":"#3498db", "P3":"#2ecc71"})
         fig.update_yaxes(autorange="reversed")
         st.plotly_chart(fig, use_container_width=True)
     with col_g2:
-        st.subheader("📊 แผนก")
-        st.plotly_chart(px.pie(df, names="Dept", hole=0.4), use_container_width=True)
+        st.subheader("📊 สัดส่วนตามแผนก")
+        st.plotly_chart(px.pie(filtered_df, names="Dept", hole=0.4), use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📄 รายละเอียดแผนงาน")
-    for index, row in df.iterrows():
-        with st.expander(f"📌 [{row['Project Status']}] {row['Dept']} | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:30]}..."):
+    st.subheader(f"📄 รายละเอียดแผนงาน ({len(filtered_df)} รายการที่พบ)")
+    
+    # 9. ตารางรายละเอียด (ใช้ข้อมูลที่กรองแล้ว)
+    for index, row in filtered_df.iterrows():
+        # ต้องใช้ index จริงจาก df หลักสำหรับการแก้ไข/ลบ
+        original_index = df.index[df['Activity'] == row['Activity']].tolist()[0]
+        
+        with st.expander(f"📌 [{row['Project Status']}] {row['Dept']} | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."):
             ca, cb, cc = st.columns([2, 1, 1])
             with ca: st.write(f"**กิจกรรม:** {row['Activity']}")
             with cb:
                 st.write(f"**Progress:** {row['Progress']}%")
                 if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
-                    st.session_state.edit_index = index
-                    st.session_state.edit_mode = True
-                    st.rerun()
+                    st.session_state.edit_index = original_index
+                    st.session_state.edit_mode = True; st.rerun()
             with cc:
                 st.write(f"**Status:** {row['Status']}")
                 if st.button(f"🗑️ ลบ", key=f"dl_{index}"):
-                    df = df.drop(index); save_data(df); st.rerun()
+                    df = df.drop(original_index); save_data(df); st.rerun()
 else:
     st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
