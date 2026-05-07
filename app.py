@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี (เน้นสีขาวชัดเจน) ---
+# --- ปรับแต่ง CSS (เน้นความชัดเจนของ UI) ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
@@ -51,7 +51,7 @@ if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
 # 4. ส่วนหัวข้อ
 c_t1, c_t2 = st.columns([0.1, 0.9])
-with c_t1: st.image("https://flaticon.com", width=70)
+with c_t1: st.image("https://images.squarespace-cdn.com/content/v1/6022f791cf4a4d20ccfcd9c4/1720041912442-BKASDM2GXDEANYX4LG4Q/Capture.PNG", width=1200)
 with c_t2: st.title("2026 Follow up & Action Plan")
 
 # 5. Metrics
@@ -104,17 +104,17 @@ if not df.empty:
                      (df["Dept"].isin(f_dept)) & 
                      (df["Project Status"].isin(f_pstat))]
 
-    # 8. กราฟ (ตัวหนังสือสีขาวทุกจุด)
+    # 8. กราฟ (บังคับตัวหนังสือขาวทุกจุด 100%)
     cg1, cg2 = st.columns(2)
     with cg1:
         st.subheader("📈 Timeline (ตามแผนก)")
         fig = px.timeline(filtered_df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
         fig.update_yaxes(autorange="reversed", tickfont=dict(color='white'))
         fig.update_xaxes(tickfont=dict(color='white'))
-        # บังคับสี Legend และ Font ทั้งหมดเป็นสีขาว
+        # บังคับสี Font ทั้งหมดในกราฟให้เป็นสีขาว
         fig.update_layout(
             font=dict(color="white"),
-            legend=dict(font=dict(color="white")),
+            legend_font_color="white",
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
@@ -122,10 +122,10 @@ if not df.empty:
     with cg2:
         st.subheader("📊 สัดส่วนงาน")
         fig_p = px.pie(filtered_df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS)
-        # บังคับสี Legend และ Font ทั้งหมดเป็นสีขาว
+        # บังคับสี Font ทั้งหมดในกราฟให้เป็นสีขาว
         fig_p.update_layout(
             font=dict(color="white"),
-            legend=dict(font=dict(color="white")),
+            legend_font_color="white",
             paper_bgcolor='rgba(0,0,0,0)'
         )
         st.plotly_chart(fig_p, use_container_width=True)
