@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี (ตัวหนังสือดำเข้มในกล่องขาว) ---
+# --- CSS ปรับแต่งสี ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
@@ -21,7 +21,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. ข้อมูลพนักงานและแผนก (คงเดิม)
+# 2. ข้อมูลพื้นฐาน
 DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60", "Residential": "#f39c12", "Cinema": "#e74c3c", "ENG-Center": "#2c3e50"}
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
@@ -47,17 +47,16 @@ df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# --- 4. ส่วนบนสุด (Title ขึ้นก่อน แล้วตามด้วย Banner) ---
-col_t1, col_t2 = st.columns([0.1, 0.9])
-with col_t1:
-    # เปลี่ยนเป็นไอคอนที่โหลดได้เสถียรกว่า
-    st.image("https://flaticon.com", width=80)
-with col_t2:
-    st.title("2026 Follow up & Action Plan")
-    st.write("### Project Dashboard | Engineer Center")
+# --- 4. ส่วนบนสุดของหน้าเว็บ (จัดลำดับใหม่) ---
 
-# วางหน้าปกไว้ใต้ Title
+# รูปหน้าปก (Banner) อยู่บนสุด
 st.image("https://squarespace-cdn.com", use_container_width=True)
+
+# Title และ Sub-title
+st.title("📋 2026 Follow up & Action Plan")
+st.markdown("### **Project Dashboard | Engineer Center**")
+
+st.markdown("---")
 
 # --- 5. สรุปภาพรวม (Metrics & Graphs) ---
 if not df.empty:
@@ -98,21 +97,27 @@ with st.sidebar:
             for k in dv:
                 if k in row: dv[k] = row[k]
         except: st.session_state.edit_mode = False
+
     with st.form("action_form"):
         s_opts = ["Planning", "In Progress", "Completed", "Delayed"]
         f_status = st.selectbox("Status", s_opts, index=s_opts.index(str(dv["Status"])) if str(dv["Status"]) in s_opts else 0)
         d_opts = list(DEPT_COLORS.keys())
         f_dept = st.selectbox("Department", d_opts, index=d_opts.index(str(dv["Dept"])) if str(dv["Dept"]) in d_opts else 0)
         f_activity = st.text_area("Action Plan & Activity", value=str(dv["Activity"]))
+        
+        # ปรับปรุงการใช้ columns ให้เสถียร 100%
         c_p = st.columns(2)
         f_sales = c_p[0].selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(str(dv["Sales PIC"])) if str(dv["Sales PIC"]) in SALES_LIST else 0)
         f_eng = c_p[1].selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(str(dv["Eng PIC"])) if str(dv["Eng PIC"]) in ENG_LIST else 0)
+        
         c_i = st.columns(2)
         f_priority = c_i[0].selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(str(dv["Priority"])) if str(dv["Priority"]) in ["High", "Medium", "Low"] else 1)
         f_pstat = c_i[1].selectbox("Project Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(str(dv["Project Status"])) if str(dv["Project Status"]) in ["P0", "P1", "P2", "P3"] else 1)
+        
         c_d = st.columns(2)
         f_start = c_d[0].date_input("Start Date", value=dv["Start Date"])
         f_end = c_d[1].date_input("End Date", value=dv["End Date"])
+        
         if st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True):
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
             final_prog = dv['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
