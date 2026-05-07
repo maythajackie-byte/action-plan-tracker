@@ -28,7 +28,7 @@ DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
-# 3. จัดการข้อมูลแบบปลอดภัย (Safe Loading)
+# 3. จัดการข้อมูลแบบปลอดภัย
 DATA_FILE = "action_plan_2026.csv"
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -41,7 +41,7 @@ def load_data():
             df_loaded['End Date'] = pd.to_datetime(df_loaded['End Date'], errors='coerce').dt.date
             return df_loaded.fillna("None")
         except:
-            return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
+            return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Status", "Start Date", "End Date", "Priority", "Project Status"])
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
 def save_data(df_to_save):
@@ -53,9 +53,17 @@ df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# 4. ส่วนหน้าปก และ สรุปภาพรวม
+# --- 4. ดึงหน้าปก โลโก้ และ Title กลับมา (Top Section) ---
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
+col_title1, col_title2 = st.columns([0.1, 0.9])
+with col_title1:
+    st.image("https://flaticon.com", width=70)
+with col_title2:
+    st.title("2026 Follow up & Action Plan")
+    st.write("### Project Dashboard | Management Overview")
+
+# 5. ส่วนสรุปภาพรวม (Metrics & Graphs)
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
@@ -69,6 +77,8 @@ if not df.empty:
         st.subheader("📈 Timeline")
         fig = px.timeline(df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
         fig.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        fig.update_yaxes(tickfont=dict(color='white'))
+        fig.update_xaxes(tickfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
     with cg2:
         st.subheader("📊 สัดส่วนงานรายแผนก")
@@ -78,7 +88,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 5. Sidebar (แก้ไขให้ปุ่มไม่หาย และ Error ไม่เกิด)
+# 6. Sidebar (Input Form - เสถียร 100%)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -86,63 +96,50 @@ with st.sidebar:
             
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     
-    # เตรียมค่าเริ่มต้นแบบปลอดภัย
-    default_data = {
-        "Status": "Planning", "Dept": "Distri-Pro", "Activity": "", 
-        "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", 
-        "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date()
-    }
+    def_vals = {"Status": "Planning", "Dept": "Distri-Pro", "Activity": "", "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date()}
     
     if st.session_state.edit_mode and st.session_state.edit_index is not None:
         try:
             row_data = df.iloc[st.session_state.edit_index]
-            for key in default_data:
-                if key in row_data: default_data[key] = row_data[key]
+            for key in def_vals:
+                if key in row_data: def_vals[key] = row_data[key]
         except:
             st.session_state.edit_mode = False
 
-    # สร้าง Form แบบมีปุ่ม Submit ชัดเจน
     with st.form("action_form"):
         status_opts = ["Planning", "In Progress", "Completed", "Delayed"]
-        f_status = st.selectbox("Status", status_opts, index=status_opts.index(default_data["Status"]) if default_data["Status"] in status_opts else 0)
-        
+        f_status = st.selectbox("Status", status_opts, index=status_opts.index(def_vals["Status"]) if def_vals["Status"] in status_opts else 0)
         dept_list = list(DEPT_COLORS.keys())
-        f_dept = st.selectbox("Department", dept_list, index=dept_list.index(default_data["Dept"]) if default_data["Dept"] in dept_list else 0)
+        f_dept = st.selectbox("Department", dept_list, index=dept_list.index(def_vals["Dept"]) if def_vals["Dept"] in dept_list else 0)
+        f_activity = st.text_area("Action Plan & Activity", value=def_vals["Activity"])
         
-        f_activity = st.text_area("Action Plan & Activity", value=default_data["Activity"])
+        c_p = st.columns(2)
+        f_sales = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(def_vals["Sales PIC"]) if def_vals["Sales PIC"] in SALES_LIST else 0)
+        f_eng = c_p.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(def_vals["Eng PIC"]) if def_vals["Eng PIC"] in ENG_LIST else 0)
         
-        col_pic = st.columns(2)
-        f_sales = col_pic[0].selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(default_data["Sales PIC"]) if default_data["Sales PIC"] in SALES_LIST else 0)
-        f_eng = col_pic[1].selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(default_data["Eng PIC"]) if default_data["Eng PIC"] in ENG_LIST else 0)
-        
-        col_prio = st.columns(2)
+        c_i = st.columns(2)
         prio_opts = ["High", "Medium", "Low"]
-        f_priority = col_prio[0].selectbox("Priority", prio_opts, index=prio_opts.index(default_data["Priority"]) if default_data["Priority"] in prio_opts else 1)
+        f_priority = c_i.selectbox("Priority", prio_opts, index=prio_opts.index(def_vals["Priority"]) if def_vals["Priority"] in prio_opts else 1)
         pstat_opts = ["P0", "P1", "P2", "P3"]
-        f_pstat = col_prio[1].selectbox("Project Status", pstat_opts, index=pstat_opts.index(default_data["Project Status"]) if default_data["Project Status"] in pstat_opts else 1)
+        f_pstat = c_i.selectbox("Project Status", pstat_opts, index=pstat_opts.index(def_vals["Project Status"]) if def_vals["Project Status"] in pstat_opts else 1)
         
-        col_date = st.columns(2)
-        f_start = col_date[0].date_input("Start Date", value=default_data["Start Date"])
-        f_end = col_date[1].date_input("End Date", value=default_data["End Date"])
+        c_d = st.columns(2)
+        f_start = c_d.date_input("Start Date", value=def_vals["Start Date"])
+        f_end = c_d.date_input("End Date", value=def_vals["End Date"])
 
-        # ปุ่มบันทึก (ต้องอยู่ข้างใน st.form)
         submitted = st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True)
-        
         if submitted:
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
             final_progress = df.iloc[st.session_state.edit_index]['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
-            
             new_row = {"Dept": f_dept, "Activity": f_activity, "Sales PIC": f_sales, "Eng PIC": f_eng, "Status": f_status, "Progress": final_progress, "Start Date": f_start, "End Date": f_end, "Priority": f_priority, "Project Status": f_pstat}
-            
             if st.session_state.edit_mode:
                 df.iloc[st.session_state.edit_index] = new_row
                 st.session_state.edit_mode = False
             else:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-            save_data(df)
-            st.rerun()
+            save_data(df); st.rerun()
 
-# 6. รายละเอียดแผนงาน
+# 7. รายละเอียดแผนงาน (Bottom Section)
 if not df.empty:
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(df)} รายการ)")
     for index, row in df.iterrows():
