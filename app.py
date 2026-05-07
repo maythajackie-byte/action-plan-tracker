@@ -52,27 +52,33 @@ st.image("https://www.nimblework.com/wp-content/uploads/2024/05/Action-plan.png"
 st.title("📋 2026 Follow up & Action Plan")
 st.write("### Project Dashboard | Engineer Center")
 
-# --- 5. ระบบ Filter (เพิ่ม Sales/Eng) ---
+# --- 5. ระบบ Filter ปรับปรุงใหม่ (อัจฉริยะขึ้น) ---
 if not df.empty:
     st.markdown("---")
     st.subheader("🔍 ค้นหาและตัวกรองข้อมูล (Filters)")
     
     row1_c1, row1_c2 = st.columns([2, 1])
     search = row1_c1.text_input("🔎 ค้นหาชื่องาน", placeholder="พิมพ์คำค้นหาที่นี่...")
-    f_dept = row1_c2.multiselect("🏢 เลือกแผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
+    f_dept = row1_c2.multiselect("🏢 แผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
     
     row2_c1, row2_c2, row2_c3 = st.columns(3)
     f_pstat = row2_c1.multiselect("🚨 P-Status", options=["P0", "P1", "P2", "P3"], default=["P0", "P1", "P2", "P3"])
     f_sales = row2_c2.multiselect("👤 Sales PIC", options=df["Sales PIC"].unique(), default=df["Sales PIC"].unique())
     f_eng = row2_c3.multiselect("🛠 Engineer PIC", options=df["Eng PIC"].unique(), default=df["Eng PIC"].unique())
 
-    # ประมวลผล Filter
+    # --- ตรรกะใหม่: ถ้าช่องว่าง ให้ถือว่าเลือกทั้งหมด (ป้องกันหน้าจอขาว) ---
+    dept_criteria = f_dept if f_dept else df["Dept"].unique()
+    pstat_criteria = f_pstat if f_pstat else ["P0", "P1", "P2", "P3"]
+    sales_criteria = f_sales if f_sales else df["Sales PIC"].unique()
+    eng_criteria = f_eng if f_eng else df["Eng PIC"].unique()
+
+    # ประมวลผล Filter ด้วยตรรกะใหม่
     filtered_df = df[
         (df["Activity"].astype(str).str.contains(search, case=False, na=False)) &
-        (df["Dept"].isin(f_dept)) &
-        (df["Project Status"].isin(f_pstat)) &
-        (df["Sales PIC"].isin(f_sales)) &
-        (df["Eng PIC"].isin(f_eng))
+        (df["Dept"].isin(dept_criteria)) &
+        (df["Project Status"].isin(pstat_criteria)) &
+        (df["Sales PIC"].isin(sales_criteria)) &
+        (df["Eng PIC"].isin(eng_criteria))
     ]
 else:
     filtered_df = df
