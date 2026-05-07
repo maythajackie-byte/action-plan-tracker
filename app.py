@@ -63,7 +63,7 @@ col_title1, col_title2 = st.columns([0.1, 0.9])
 
 with col_title1:
     # ใส่รูปโลโก้ของคุณตรงนี้ (เปลี่ยน URL เป็นรูปที่คุณต้องการได้เลย)
-    st.image("https://t4.ftcdn.net/jpg/01/38/23/39/360_F_138233979_Ns6YHS8w4b4jDEvi7oppdU79Fzw9pSY3.jpg", width=70)
+    st.image("https://t4.ftcdn.net/jpg/01/38/23/39/360_F_138233979_Ns6YHS8w4b4jDEvi7oppdU79Fzw9pSY3.jpg", width=700)
 
 with col_title2:
     st.title("2026 Follow up & Action Plan")
