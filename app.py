@@ -10,9 +10,24 @@ st.set_page_config(page_title="Action Plan 2026", layout="wide")
 # --- ปรับแต่ง CSS ---
 st.markdown("""
     <style>
-    [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
-    [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label { color: white !important; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; border-left: 5px solid #0b5345; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+    /* ปรับแต่งกล่อง Metric ให้เด่นชัดอ่านง่าย */
+    [data-testid="stMetric"] {
+        background-color: #ffffff; /* พื้นหลังขาว */
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 8px solid #0b5345; /* แถบสีเขียวเข้มด้านซ้าย */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    /* ปรับสีตัวเลข Metric ให้เป็นสีเขียวเข้ม */
+    [data-testid="stMetricValue"] {
+        color: #0b5345 !important;
+        font-weight: bold;
+    }
+    /* ปรับสีหัวข้อ Metric ให้เป็นสีเทาเข้ม */
+    [data-testid="stMetricLabel"] {
+        color: #333333 !important;
+        font-size: 18px !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
