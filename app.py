@@ -29,7 +29,7 @@ DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
-# 3. จัดการข้อมูล (Safe Mode)
+# 3. จัดการข้อมูลแบบปลอดภัย (Safe Mode)
 DATA_FILE = "action_plan_2026.csv"
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -54,18 +54,22 @@ df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# 4. ส่วนหน้าปก และ สรุปภาพรวม
+# --- 4. ส่วนหัวของหน้าเว็บ (หน้าปก และ Title) ---
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
+col_t1, col_t2 = st.columns([0.1, 0.9])
+with col_t1:
+    st.image("https://flaticon.com", width=70)
+with col_t2:
+    st.title("2026 Follow up & Action Plan")
+
+# 5. ส่วนสรุปภาพรวม (Metrics & Graphs)
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
-    # ปรับปรุงการคำนวณ Progress ให้ปลอดภัยขึ้น
-    try:
-        avg_progress = pd.to_numeric(df['Progress'], errors='coerce').mean()
-    except:
-        avg_progress = 0
-    m2.metric("📈 ความคืบหน้าเฉลี่ย", f"{avg_progress:.1f}%")
+    # คำนวณเปอร์เซ็นต์อย่างปลอดภัย
+    avg_prog = pd.to_numeric(df['Progress'], errors='coerce').mean()
+    m2.metric("📈 ความคืบหน้าเฉลี่ย", f"{avg_prog:.1f}%")
     m3.metric("🚨 งานด่วนพิเศษ (P0)", f"{len(df[df['Project Status'] == 'P0'])} รายการ")
     
     st.markdown("---")
@@ -86,7 +90,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 5. Sidebar (แก้ไขจุดที่ Error และนำปุ่มบันทึกกลับมา)
+# 6. Sidebar (แก้ไขให้ปุ่มไม่หาย และ Error ไม่เกิด)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -94,12 +98,8 @@ with st.sidebar:
             
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     
-    # ดึงค่าเริ่มต้นแบบปลอดภัยสูงสุด
-    def_vals = {
-        "Status": "Planning", "Dept": "Distri-Pro", "Activity": "", 
-        "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", 
-        "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date()
-    }
+    # เตรียมค่าเริ่มต้นแบบปลอดภัย
+    def_vals = {"Status": "Planning", "Dept": "Distri-Pro", "Activity": "", "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date()}
     
     if st.session_state.edit_mode and st.session_state.edit_index is not None:
         try:
@@ -109,10 +109,9 @@ with st.sidebar:
         except:
             st.session_state.edit_mode = False
 
-    # สร้างแบบฟอร์ม (Form)
+    # สร้าง Form แบบมีปุ่ม Submit ชัดเจน
     with st.form("action_form"):
         status_opts = ["Planning", "In Progress", "Completed", "Delayed"]
-        # ปรับการหา Index ให้ปลอดภัย ป้องกัน AttributeError
         s_val = str(def_vals["Status"])
         f_status = st.selectbox("Status", status_opts, index=status_opts.index(s_val) if s_val in status_opts else 0)
         
@@ -123,7 +122,7 @@ with st.sidebar:
         f_activity = st.text_area("Action Plan & Activity", value=str(def_vals["Activity"]))
         
         c_p = st.columns(2)
-        # แก้จุด Error บรรทัดที่ 122 ในรูปภาพ
+        # แก้ไขจุดที่เกิด AttributeError (บรรทัดที่ 128 ในรูป)
         sales_val = str(def_vals["Sales PIC"])
         f_sales = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(sales_val) if sales_val in SALES_LIST else 0)
         
@@ -134,20 +133,19 @@ with st.sidebar:
         prio_opts = ["High", "Medium", "Low"]
         p_val = str(def_vals["Priority"])
         f_priority = c_i.selectbox("Priority", prio_opts, index=prio_opts.index(p_val) if p_val in prio_opts else 1)
-        
-        ps_opts = ["P0", "P1", "P2", "P3"]
+        pstat_opts = ["P0", "P1", "P2", "P3"]
         ps_val = str(def_vals["Project Status"])
-        f_pstat = c_i.selectbox("Project Status", ps_opts, index=ps_opts.index(ps_val) if ps_val in ps_opts else 1)
+        f_pstat = c_i.selectbox("Project Status", pstat_opts, index=pstat_opts.index(ps_val) if ps_val in pstat_opts else 1)
         
         c_d = st.columns(2)
         f_start = c_d.date_input("Start Date", value=def_vals["Start Date"])
         f_end = c_d.date_input("End Date", value=def_vals["End Date"])
 
-        # ปุ่มบันทึกข้อมูล (ต้องอยู่ภายใน st.form เสมอ)
+        # ปุ่มบันทึก (ต้องอยู่ท้ายสุดภายใน st.form)
         submitted = st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True)
         
         if submitted:
-            # คำนวณความคืบหน้าอัตโนมัติตามสถานะ
+            # Auto-Progress logic
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
             final_progress = df.iloc[st.session_state.edit_index]['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
             
@@ -156,13 +154,14 @@ with st.sidebar:
             if st.session_state.edit_mode:
                 df.iloc[st.session_state.edit_index] = new_row
                 st.session_state.edit_mode = False
+                st.session_state.edit_index = None
             else:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df)
-            st.success("บันทึกข้อมูลเรียบร้อย!")
+            st.success("บันทึกสำเร็จ!")
             st.rerun()
 
-# 6. รายละเอียดแผนงาน
+# 7. รายละเอียดแผนงาน
 if not df.empty:
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(df)} รายการ)")
     for index, row in df.iterrows():
