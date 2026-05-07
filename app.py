@@ -46,7 +46,52 @@ if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 # --- 3. หน้าปก ---
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
-# 4. Metrics
+# 4. กราฟและรายละเอียด
+if not df.empty:
+    st.subheader("🔍 ค้นหาและตัวกรอง")
+    f1, f2, f3 = st.columns(3)
+    search = f1.text_input("🔎 ค้นหาชื่องาน", placeholder="พิมพ์เพื่อค้นหา...")
+    f_dept = f2.multiselect("🏢 แผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
+    f_pstat = f3.multiselect("🚨 P-Status", options=["P0", "P1", "P2", "P3"], default=["P0", "P1", "P2", "P3"])
+    filtered_df = df[(df["Activity"].str.contains(search, case=False, na=False)) & (df["Dept"].isin(f_dept)) & (df["Project Status"].isin(f_pstat))]
+
+    st.markdown("---")
+    st.subheader(f"📄 รายละเอียดแผนงาน ({len(filtered_df)} รายการ)")
+    
+    for index, row in filtered_df.iterrows():
+        # --- ปรับหัวข้อ: เพิ่มตัวเลข % เข้าไปใน Tab สีขาวเลย ---
+        header_label = f"📌 [{row['Project Status']}] {row['Dept']} | {row['Progress']}% | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."
+        
+        with st.expander(header_label):
+            ca, cb, cc = st.columns([2.5, 1, 1])
+            with ca:
+                # --- ปรับรายละเอียด: โชว์กิจกรรมแบบละเอียดแทน Bar ---
+                st.markdown("##### 📋 รายละเอียดกิจกรรม (Full Activity)")
+                st.info(row['Activity']) # ใช้กล่อง Info เพื่อให้อ่านง่ายขึ้น
+            with cb:
+                st.write(f"**สถานะ:** {row['Status']}")
+                st.write(f"**ความคืบหน้า:** {row['Progress']}%")
+                if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
+                    st.session_state.edit_index = index; st.session_state.edit_mode = True; st.rerun()
+            with cc:
+                st.write(f"**Timeline:**")
+                st.caption(f"{row['Start Date']} ถึง {row['End Date']}")
+                if st.button(f"🗑️ ลบ", key=f"dl_{index}"):
+                    df = df.drop(index); save_data(df); st.rerun()
+
+    # กราฟสรุปด้านล่าง
+    st.markdown("---")
+    cg1, cg2 = st.columns(2)
+    with cg1:
+        fig = px.timeline(filtered_df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
+        fig.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
+    with cg2:
+        fig_p = px.pie(filtered_df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS)
+        fig_p.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_p, use_container_width=True)
+
+# 5. Metrics
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
@@ -55,7 +100,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 5. Sidebar (นำ Progress Slider ออก และใช้ระบบ Auto)
+# 6. Sidebar (นำ Progress Slider ออก และใช้ระบบ Auto)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -102,49 +147,5 @@ with st.sidebar:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df); st.rerun()
 
-# 6. กราฟและรายละเอียด
-if not df.empty:
-    st.subheader("🔍 ค้นหาและตัวกรอง")
-    f1, f2, f3 = st.columns(3)
-    search = f1.text_input("🔎 ค้นหาชื่องาน", placeholder="พิมพ์เพื่อค้นหา...")
-    f_dept = f2.multiselect("🏢 แผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
-    f_pstat = f3.multiselect("🚨 P-Status", options=["P0", "P1", "P2", "P3"], default=["P0", "P1", "P2", "P3"])
-    filtered_df = df[(df["Activity"].str.contains(search, case=False, na=False)) & (df["Dept"].isin(f_dept)) & (df["Project Status"].isin(f_pstat))]
-
-    st.markdown("---")
-    st.subheader(f"📄 รายละเอียดแผนงาน ({len(filtered_df)} รายการ)")
-    
-    for index, row in filtered_df.iterrows():
-        # --- ปรับหัวข้อ: เพิ่มตัวเลข % เข้าไปใน Tab สีขาวเลย ---
-        header_label = f"📌 [{row['Project Status']}] {row['Dept']} | {row['Progress']}% | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."
-        
-        with st.expander(header_label):
-            ca, cb, cc = st.columns([2.5, 1, 1])
-            with ca:
-                # --- ปรับรายละเอียด: โชว์กิจกรรมแบบละเอียดแทน Bar ---
-                st.markdown("##### 📋 รายละเอียดกิจกรรม (Full Activity)")
-                st.info(row['Activity']) # ใช้กล่อง Info เพื่อให้อ่านง่ายขึ้น
-            with cb:
-                st.write(f"**สถานะ:** {row['Status']}")
-                st.write(f"**ความคืบหน้า:** {row['Progress']}%")
-                if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
-                    st.session_state.edit_index = index; st.session_state.edit_mode = True; st.rerun()
-            with cc:
-                st.write(f"**Timeline:**")
-                st.caption(f"{row['Start Date']} ถึง {row['End Date']}")
-                if st.button(f"🗑️ ลบ", key=f"dl_{index}"):
-                    df = df.drop(index); save_data(df); st.rerun()
-
-    # กราฟสรุปด้านล่าง
-    st.markdown("---")
-    cg1, cg2 = st.columns(2)
-    with cg1:
-        fig = px.timeline(filtered_df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
-        fig.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig, use_container_width=True)
-    with cg2:
-        fig_p = px.pie(filtered_df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS)
-        fig_p.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_p, use_container_width=True)
 else:
     st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
