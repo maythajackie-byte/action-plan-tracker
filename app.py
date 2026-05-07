@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี (Sidebar เขียว, กล่อง Metric และ Dropdown ขาวสะอาด) ---
+# --- ปรับแต่ง CSS (เน้นตัวหนังสือขาวในกราฟและ UI) ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
@@ -17,20 +17,22 @@ st.markdown("""
     [data-testid="stMetricValue"] { color: #1a1a1a !important; font-weight: bold !important; }
     div[data-testid="stExpander"] { background-color: white !important; border: 1px solid #0b5345 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; }
     div[data-testid="stExpander"] p { color: #0b5345 !important; font-weight: bold !important; }
+    
+    /* ปรับสีตัวหนังสือหัวข้อกราฟให้เป็นสีขาว */
+    .stPlotlyChart h2 { color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. กำหนดสีประจำแผนกตามรูปภาพ ---
+# --- 2. กำหนดสีประจำแผนก ---
 DEPT_COLORS = {
     "Distri-Pro": "#3498db",    # สีฟ้า
     "Post": "#8e44ad",          # สีม่วง
     "Broadcast": "#27ae60",     # สีเขียว
-    "Residential": "#f39c12",   # สีส้ม
-    "Cinema": "#e74c3c",        # สีแดง
-    "ENG-Center": "#2c3e50"     # สีเทาเข้ม
+    "Residential": "#f39c12",
+    "Cinema": "#e74c3c",
+    "ENG-Center": "#2c3e50"
 }
 
-# รายชื่อพนักงาน
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
@@ -59,7 +61,7 @@ c1, c2 = st.columns([0.1, 0.9])
 with c1: st.image("https://flaticon.com", width=70)
 with c2: st.title("2026 Follow up & Action Plan")
 
-# 5. Metrics (3 กรอบขาว)
+# 5. Metrics สรุปภาพรวม
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
@@ -68,7 +70,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 6. Sidebar (Input Form)
+# 6. Sidebar (การกรอกข้อมูล)
 with st.sidebar:
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     val = df.iloc[st.session_state.edit_index] if st.session_state.edit_mode else None
@@ -91,37 +93,49 @@ with st.sidebar:
             if st.session_state.edit_mode: df.iloc[st.session_state.edit_index] = new_row; st.session_state.edit_mode = False
             else: df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df); st.rerun()
-
     if st.session_state.edit_mode and st.button("❌ ยกเลิกการแก้ไข"):
-        st.session_state.edit_mode = False
-        st.rerun()
+        st.session_state.edit_mode = False; st.rerun()
 
-# 7. กราฟ (แก้ไขจุด Error บรรทัดที่ 97)
+# 7. --- ระบบ Filter (กลับมาแล้ว) ---
 if not df.empty:
-    col_g1, col_g2 = st.columns(2) # ใส่เลข 2 เพื่อแก้ Error
+    st.subheader("🔍 ค้นหาและตัวกรอง")
+    f_c1, f_c2 = st.columns([2, 1])
+    search = f_c1.text_input("🔎 ค้นหาชื่องาน/โปรเจกต์", placeholder="พิมพ์เพื่อค้นหา...")
+    f_dept = f_c2.multiselect("🏢 เลือกแผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
+    
+    # กรองข้อมูลตามที่เลือก
+    filtered_df = df[(df["Activity"].str.contains(search, case=False, na=False)) & (df["Dept"].isin(f_dept))]
+
+    # 8. กราฟ (เน้นตัวหนังสือขาว)
+    col_g1, col_g2 = st.columns(2)
     with col_g1:
         st.subheader("📈 Timeline (ตามแผนก)")
-        fig = px.timeline(df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
-        fig.update_yaxes(autorange="reversed")
+        fig = px.timeline(filtered_df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
+        fig.update_yaxes(autorange="reversed", tickfont=dict(color='white')) # ปรับตัวหนังสือแกน Y เป็นสีขาว
+        fig.update_xaxes(tickfont=dict(color='white')) # ปรับตัวหนังสือแกน X เป็นสีขาว
+        fig.update_layout(font=dict(color="white"), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
     with col_g2:
         st.subheader("📊 สัดส่วนงาน")
-        st.plotly_chart(px.pie(df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS), use_container_width=True)
+        fig_pie = px.pie(filtered_df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS)
+        fig_pie.update_layout(font=dict(color="white"), paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_pie, use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📄 รายละเอียดแผนงาน")
-    for index, row in df.iterrows():
+    st.subheader(f"📄 รายละเอียดแผนงาน ({len(filtered_df)} รายการ)")
+    for index, row in filtered_df.iterrows():
         with st.expander(f"📌 [{row['Project Status']}] {row['Dept']} | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."):
-            ca, cb, cc = st.columns([2, 1, 1])
+            ca, cb, cc = st.columns()
             with ca: st.write(f"**กิจกรรม:** {row['Activity']}")
             with cb:
-                st.write(f"**ความคืบหน้า:** {row['Progress']}%")
+                st.write(f"**Progress:** {row['Progress']}%")
                 if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
-                    st.session_state.edit_index = index
+                    # ค้นหา index จริงจากตารางหลัก
+                    st.session_state.edit_index = df.index[df['Activity'] == row['Activity']].tolist()[0]
                     st.session_state.edit_mode = True; st.rerun()
             with cc:
-                st.write(f"**สถานะ:** {row['Status']}")
                 if st.button(f"🗑️ ลบ", key=f"dl_{index}"):
-                    df = df.drop(index); save_data(df); st.rerun()
+                    actual_idx = df.index[df['Activity'] == row['Activity']].tolist()[0]
+                    df = df.drop(actual_idx); save_data(df); st.rerun()
 else:
     st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
