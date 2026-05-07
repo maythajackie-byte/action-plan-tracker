@@ -7,34 +7,58 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- Master CSS ---
+# --- Master CSS ปรับปรุงเพื่อความคมชัดของตัวหนังสือ ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
     [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label { color: white !important; }
-    [data-testid="stMetric"] { background-color: #ffffff !important; padding: 20px; border-radius: 12px; border-left: 8px solid #0b5345; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    
+    /* กล่อง Metric ด้านบน */
+    [data-testid="stMetric"] {
+        background-color: #ffffff !important;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 8px solid #0b5345;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
     [data-testid="stMetricLabel"] { color: #0b5345 !important; font-size: 1.1rem !important; font-weight: 600 !important; }
     [data-testid="stMetricValue"] { color: #1a1a1a !important; font-weight: bold !important; }
     
-    /* สไตล์สำหรับ Expander ทั่วไป */
-    div[data-testid="stExpander"] { background-color: white !important; border-radius: 12px !important; border: 1px solid #ddd !important; margin-bottom: 10px !important; }
-    div[data-testid="stExpander"] p { color: #1a1a1a !important; }
+    /* แก้ไขกล่องรายละเอียด (Expander) */
+    div[data-testid="stExpander"] { 
+        background-color: white !important; 
+        border-radius: 12px !important; 
+        border: 1px solid #ddd !important; 
+        margin-bottom: 10px !important; 
+    }
+    
+    /* บังคับสีตัวหนังสือทุกชนิดในกล่อง Expander ให้เป็นสีดำเข้ม */
+    div[data-testid="stExpander"] p, 
+    div[data-testid="stExpander"] span, 
+    div[data-testid="stExpander"] label,
+    div[data-testid="stExpander"] div { 
+        color: #1a1a1a !important; 
+        font-weight: 500 !important;
+    }
+    
+    /* บังคับสีหัวข้อหนา (Bold) ในกล่องให้เป็นสีเขียวเข้มเพื่อแยกความแตกต่าง */
+    div[data-testid="stExpander"] b, 
+    div[data-testid="stExpander"] strong,
+    div[data-testid="stExpander"] h5 { 
+        color: #0b5345 !important; 
+        font-weight: bold !important;
+    }
+    
+    /* ปรับสีปุ่มในกล่องให้เด่นขึ้น */
+    div[data-testid="stExpander"] button {
+        border: 1px solid #0b5345 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 # 2. ข้อมูลพื้นฐานและสี
-DEPT_COLORS = {
-    "Distri-Pro": "#3498db", # สีฟ้า
-    "Post": "#8e44ad",       # สีม่วง
-    "Broadcast": "#27ae60",  # สีเขียว
-    "Residential": "#f39c12",
-    "Cinema": "#e74c3c",
-    "ENG-Center": "#2c3e50"
-}
-
-# ไอคอนสำหรับแสดงหน้าหัวข้อเพื่อเพิ่มความชัดเจน
+DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60", "Residential": "#f39c12", "Cinema": "#e74c3c", "ENG-Center": "#2c3e50"}
 DEPT_ICONS = {"Distri-Pro": "🔵", "Post": "🟣", "Broadcast": "🟢", "Residential": "🟠", "Cinema": "🔴", "ENG-Center": "⚫"}
-
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
@@ -54,8 +78,8 @@ def load_data():
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
 def save_data(df_s): df_s.to_csv(DATA_FILE, index=False)
-
 df = load_data()
+
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
@@ -74,20 +98,18 @@ if not df.empty:
     st.markdown("---")
     cg1, cg2 = st.columns(2)
     with cg1:
-        st.subheader("📈 Timeline")
         fig = px.timeline(df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
         fig.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         fig.update_yaxes(tickfont=dict(color='white')); fig.update_xaxes(tickfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
     with cg2:
-        st.subheader("📊 สัดส่วนงานรายแผนก")
         fig_p = px.pie(df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS)
         fig_p.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_p, use_container_width=True)
 
 st.markdown("---")
 
-# --- 6. Sidebar (Auto-Progress Real-time) ---
+# --- 6. Sidebar ---
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -123,41 +145,29 @@ with st.sidebar:
             else: df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df); st.rerun()
 
-# --- 7. รายละเอียดแผนงาน (Color Coded Expander) ---
+# --- 7. รายละเอียดแผนงาน (บีบตัวหนังสือให้เข้มคมชัด) ---
 if not df.empty:
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(df)} รายการ)")
     for index, row in df.iterrows():
-        # กำหนดไอคอนและสีตามแผนก
-        icon = DEPT_ICONS.get(row['Dept'], "⚪")
         color = DEPT_COLORS.get(row['Dept'], "#ddd")
-        
-        # หัวข้อที่มีไอคอนแผนก
+        icon = DEPT_ICONS.get(row['Dept'], "⚪")
         header_label = f"{icon} [{row['Project Status']}] {row['Dept']} | {row['Progress']}% | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."
         
-        # ใช้ container เพื่อใส่เส้นสีด้านซ้าย (Border Left)
         with st.container():
-            # ฉีด CSS เฉพาะกิจสำหรับ Expander นี้
-            st.markdown(f"""
-                <style>
-                div[data-testid="stExpander"]:nth-of-type({index+1}) {{
-                    border-left: 10px solid {color} !important;
-                }}
-                </style>
-                """, unsafe_allow_html=True)
-            
+            st.markdown(f"<style>div[data-testid='stExpander']:nth-of-type({index+1}) {{ border-left: 10px solid {color} !important; }}</style>", unsafe_allow_html=True)
             with st.expander(header_label):
                 ca, cb, cc = st.columns([2.5, 1.2, 1.2])
                 with ca:
-                    st.markdown(f"##### 📋 รายละเอียดกิจกรรม")
+                    st.markdown(f"**📋 รายละเอียดกิจกรรม:**")
                     st.info(row['Activity'])
                 with cb:
-                    st.write(f"**สถานะ:** {row['Status']}")
-                    st.write(f"**ความคืบหน้า:** {row['Progress']}%")
+                    st.markdown(f"**สถานะ:** {row['Status']}")
+                    st.markdown(f"**ความคืบหน้า:** {row['Progress']}%")
                     if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
                         st.session_state.edit_index = index; st.session_state.edit_mode = True; st.rerun()
                 with cc:
-                    st.write(f"**Timeline:**")
-                    st.caption(f"{row['Start Date']} ถึง {row['End Date']}")
+                    st.markdown(f"**Timeline:**")
+                    st.markdown(f"{row['Start Date']} ถึง {row['End Date']}")
                     if st.button(f"🗑️ ลบรายการ", key=f"dl_{index}"):
                         df = df.drop(index); save_data(df); st.rerun()
 else:
