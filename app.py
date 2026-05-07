@@ -16,7 +16,6 @@ st.markdown("""
     [data-testid="stMetricLabel"] { color: #0b5345 !important; font-size: 1.1rem !important; font-weight: 600 !important; }
     [data-testid="stMetricValue"] { color: #1a1a1a !important; font-weight: bold !important; }
     
-    /* กล่องรายละเอียดสีขาว */
     div[data-testid="stExpander"] { background-color: white !important; border: 1px solid #0b5345 !important; border-radius: 12px !important; }
     div[data-testid="stExpander"] p, div[data-testid="stExpander"] span, div[data-testid="stExpander"] label {
         color: #1a1a1a !important; /* ตัวหนังสือสีดำเข้ม */
@@ -25,7 +24,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. ข้อมูลพนักงานและสีแผนก
+# 2. ข้อมูลพื้นฐาน
 DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60", "Residential": "#f39c12", "Cinema": "#e74c3c", "ENG-Center": "#2c3e50"}
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
@@ -52,11 +51,10 @@ df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# 4. ส่วนหน้าปก และ สรุปภาพรวม (Metrics & Graphs ย้ายขึ้นบน)
+# 4. ส่วนหน้าปก และ สรุปภาพรวม (Metrics & Graphs)
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
 if not df.empty:
-    # --- Metrics ---
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
     m2.metric("📈 ความคืบหน้าเฉลี่ย", f"{df['Progress'].mean():.1f}%")
@@ -64,7 +62,6 @@ if not df.empty:
     
     st.markdown("---")
     
-    # --- Graphs ---
     cg1, cg2 = st.columns(2)
     with cg1:
         st.subheader("📈 Timeline")
@@ -79,7 +76,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 5. Sidebar (Input Form - แก้ Error ให้เสถียร)
+# 5. Sidebar (แก้ไขให้ปุ่มบันทึกไม่หาย และไม่เกิด Error)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -87,50 +84,74 @@ with st.sidebar:
             
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     
-    val = None
+    # เตรียมค่าเริ่มต้นสำหรับแบบฟอร์ม
     if st.session_state.edit_mode and st.session_state.edit_index is not None:
-        val = df.iloc[st.session_state.edit_index]
-        
-    with st.form("action_form", clear_on_submit=True):
+        row_data = df.iloc[st.session_state.edit_index]
+        def_status = row_data['Status']
+        def_dept = row_data['Dept']
+        def_activity = row_data['Activity']
+        def_sales = row_data['Sales PIC']
+        def_eng = row_data['Eng PIC']
+        def_priority = row_data['Priority']
+        def_pstat = row_data['Project Status']
+        def_start = row_data['Start Date']
+        def_end = row_data['End Date']
+    else:
+        def_status = "Planning"
+        def_dept = "Distri-Pro"
+        def_activity = ""
+        def_sales = "None"
+        def_eng = "None"
+        def_priority = "Medium"
+        def_pstat = "P1"
+        def_start = datetime.now().date()
+        def_end = datetime.now().date()
+
+    with st.form("action_form"):
         status_opts = ["Planning", "In Progress", "Completed", "Delayed"]
-        status = st.selectbox("Status", status_opts, index=status_opts.index(val['Status']) if val is not None else 0)
+        f_status = st.selectbox("Status", status_opts, index=status_opts.index(def_status) if def_status in status_opts else 0)
         
         dept_list = list(DEPT_COLORS.keys())
-        dept = st.selectbox("Department", dept_list, index=dept_list.index(val['Dept']) if val is not None else 0)
-        activity = st.text_area("Action Plan & Activity", value=val['Activity'] if val is not None else "")
+        f_dept = st.selectbox("Department", dept_list, index=dept_list.index(def_dept) if def_dept in dept_list else 0)
+        
+        f_activity = st.text_area("Action Plan & Activity", value=def_activity)
         
         c_p = st.columns(2)
-        # แก้ไขจุดที่เกิด AttributeError
-        s_val = val['Sales PIC'] if val is not None else "None"
-        sales_p = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(s_val) if s_val in SALES_LIST else 0)
-        
-        e_val = val['Eng PIC'] if val is not None else "None"
-        eng_p = c_p.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(e_val) if e_val in ENG_LIST else 0)
+        f_sales = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(def_sales) if def_sales in SALES_LIST else 0)
+        f_eng = c_p.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(def_eng) if def_eng in ENG_LIST else 0)
         
         c_i = st.columns(2)
-        priority = c_i.selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(val['Priority']) if val is not None else 1)
-        p_status = c_i.selectbox("Project Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(val['Project Status']) if val is not None else 1)
+        prio_opts = ["High", "Medium", "Low"]
+        f_priority = c_i.selectbox("Priority", prio_opts, index=prio_opts.index(def_priority) if def_priority in prio_opts else 1)
+        
+        pstat_opts = ["P0", "P1", "P2", "P3"]
+        f_pstat = c_i.selectbox("Project Status", pstat_opts, index=pstat_opts.index(def_pstat) if def_pstat in pstat_opts else 1)
         
         c_d = st.columns(2)
-        start_d = c_d.date_input("Start Date", value=val['Start Date'] if val is not None else datetime.now().date())
-        end_d = c_d.date_input("End Date", value=val['End Date'] if val is not None else datetime.now().date())
+        f_start = c_d.date_input("Start Date", value=f_start if 'f_start' in locals() else def_start)
+        f_end = c_d.date_input("End Date", value=f_end if 'f_end' in locals() else def_end)
 
-        # ปุ่มบันทึกข้อมูล (Submit Button)
-        if st.form_submit_button("💾 บันทึกข้อมูล"):
+        # ปุ่มบันทึก (อยู่ภายในฟอร์มเสมอ)
+        submitted = st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True)
+        
+        if submitted:
             # Auto-Progress logic
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
-            final_progress = val['Progress'] if val is not None else auto_map.get(status, 0)
+            final_progress = df.iloc[st.session_state.edit_index]['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
             
-            new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": final_progress, "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status}
+            new_row = {"Dept": f_dept, "Activity": f_activity, "Sales PIC": f_sales, "Eng PIC": f_eng, "Status": f_status, "Progress": final_progress, "Start Date": f_start, "End Date": f_end, "Priority": f_priority, "Project Status": f_pstat}
             
             if st.session_state.edit_mode:
                 df.iloc[st.session_state.edit_index] = new_row
                 st.session_state.edit_mode = False
+                st.session_state.edit_index = None
             else:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-            save_data(df); st.rerun()
+            save_data(df)
+            st.success("บันทึกสำเร็จ!")
+            st.rerun()
 
-# 6. รายละเอียดแผนงาน (ด้านล่าง)
+# 6. รายละเอียดแผนงาน
 if not df.empty:
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(df)} รายการ)")
     for index, row in df.iterrows():
