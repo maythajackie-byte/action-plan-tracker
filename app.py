@@ -118,7 +118,7 @@ search = f_c1.text_input("🔎 ค้นหาชื่องาน", placeholde
 f_dept = f_c2.multiselect("🏢 แผนก", options=df["Dept"].unique() if not df.empty else [])
 
 f_c3, f_c4, f_c5 = st.columns(3)
-f_pstat = f_c3.multiselect("🚨 P-Status", options=["P0", "P1", "P2", "P3"])
+f_pstat = f_c3.multiselect("⏳ Project Status", options=["P0", "P1", "P2", "P3"])
 f_sales = f_c4.multiselect("👤 Sales", options=df["Sales PIC"].unique() if not df.empty else [])
 f_eng = f_c5.multiselect("🛠 Engineer", options=df["Eng PIC"].unique() if not df.empty else [])
 
