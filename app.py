@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี ---
+# --- CSS ปรับแต่งสี (ตัวหนังสือดำเข้มในกล่องขาว) ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
@@ -39,7 +39,7 @@ def load_data():
             df_loaded['End Date'] = pd.to_datetime(df_loaded['End Date'], errors='coerce').dt.date
             return df_loaded.fillna("None")
         except: pass
-    return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
+    return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Status", "Start Date", "End Date", "Priority", "Project Status"])
 
 def save_data(df_to_save): df_to_save.to_csv(DATA_FILE, index=False)
 df = load_data()
@@ -47,19 +47,20 @@ df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# --- 4. ส่วนบนสุดของหน้าเว็บ (จัดลำดับใหม่) ---
+# --- 4. ส่วนบนสุดของหน้าเว็บ (จัดลำดับใหม่เพื่อความสวยงาม) ---
 
-# รูปหน้าปก (Banner) อยู่บนสุด
+# 1. รูปหน้าปก (Banner) อยู่บนสุด
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
-# Title และ Sub-title
+# 2. ชื่อโปรเจกต์ (Title) และคำอธิบาย (Sub-title)
 st.title("📋 2026 Follow up & Action Plan")
-st.markdown("### **Project Dashboard | Engineer Center**")
+st.markdown("#### **Project Dashboard | Engineer Center**")
 
 st.markdown("---")
 
 # --- 5. สรุปภาพรวม (Metrics & Graphs) ---
 if not df.empty:
+    # --- Metrics ---
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
     avg_prog = pd.to_numeric(df['Progress'], errors='coerce').mean()
@@ -68,10 +69,12 @@ if not df.empty:
     
     st.markdown("---")
     
+    # --- กราฟแสดงผล ---
     cg1, cg2 = st.columns(2)
     with cg1:
         st.subheader("📈 Timeline")
         fig = px.timeline(df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
+        # บังคับตัวหนังสือขาวในกราฟ
         fig.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         fig.update_yaxes(tickfont=dict(color='white'))
         fig.update_xaxes(tickfont=dict(color='white'))
@@ -84,12 +87,14 @@ if not df.empty:
 
 st.markdown("---")
 
-# --- 6. Sidebar (Input Form) ---
+# --- 6. Sidebar (Input Form พร้อมปุ่ม Back) ---
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
             st.session_state.edit_mode = False; st.session_state.edit_index = None; st.rerun()
+            
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
+    
     dv = {"Status": "Planning", "Dept": "Distri-Pro", "Activity": "", "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date(), "Progress": 0}
     if st.session_state.edit_mode and st.session_state.edit_index is not None:
         try:
@@ -105,7 +110,7 @@ with st.sidebar:
         f_dept = st.selectbox("Department", d_opts, index=d_opts.index(str(dv["Dept"])) if str(dv["Dept"]) in d_opts else 0)
         f_activity = st.text_area("Action Plan & Activity", value=str(dv["Activity"]))
         
-        # ปรับปรุงการใช้ columns ให้เสถียร 100%
+        # กล่อง PIC แยก 2 ฝั่ง
         c_p = st.columns(2)
         f_sales = c_p[0].selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(str(dv["Sales PIC"])) if str(dv["Sales PIC"]) in SALES_LIST else 0)
         f_eng = c_p[1].selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(str(dv["Eng PIC"])) if str(dv["Eng PIC"]) in ENG_LIST else 0)
@@ -118,6 +123,7 @@ with st.sidebar:
         f_start = c_d[0].date_input("Start Date", value=dv["Start Date"])
         f_end = c_d[1].date_input("End Date", value=dv["End Date"])
         
+        # ปุ่มบันทึก
         if st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True):
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
             final_prog = dv['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
