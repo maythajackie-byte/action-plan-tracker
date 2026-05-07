@@ -15,6 +15,7 @@ st.markdown("""
     [data-testid="stMetric"] { background-color: #ffffff !important; padding: 20px; border-radius: 12px; border-left: 8px solid #0b5345; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     [data-testid="stMetricLabel"] { color: #0b5345 !important; font-size: 1.1rem !important; font-weight: 600 !important; }
     [data-testid="stMetricValue"] { color: #1a1a1a !important; font-weight: bold !important; }
+    
     div[data-testid="stExpander"] { background-color: white !important; border: 1px solid #0b5345 !important; border-radius: 12px !important; }
     div[data-testid="stExpander"] p, div[data-testid="stExpander"] span, div[data-testid="stExpander"] label {
         color: #1a1a1a !important; 
@@ -28,7 +29,7 @@ DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
-# 3. จัดการข้อมูลแบบปลอดภัย
+# 3. จัดการข้อมูลแบบปลอดภัย (Safe Mode)
 DATA_FILE = "action_plan_2026.csv"
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -41,7 +42,7 @@ def load_data():
             df_loaded['End Date'] = pd.to_datetime(df_loaded['End Date'], errors='coerce').dt.date
             return df_loaded.fillna("None")
         except:
-            return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Status", "Start Date", "End Date", "Priority", "Project Status"])
+            return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
 def save_data(df_to_save):
@@ -53,15 +54,14 @@ df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# --- 4. ดึงหน้าปก โลโก้ และ Title กลับมา (Top Section) ---
+# --- 4. ส่วนหัวของหน้าเว็บ (หน้าปก และ Title) ---
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
-col_title1, col_title2 = st.columns([0.1, 0.9])
-with col_title1:
+col_t1, col_t2 = st.columns([0.1, 0.9])
+with col_t1:
     st.image("https://flaticon.com", width=70)
-with col_title2:
+with col_t2:
     st.title("2026 Follow up & Action Plan")
-    st.write("### Project Dashboard | Management Overview")
 
 # 5. ส่วนสรุปภาพรวม (Metrics & Graphs)
 if not df.empty:
@@ -88,7 +88,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 6. Sidebar (Input Form - เสถียร 100%)
+# 6. Sidebar (แก้ไขให้ปุ่มไม่หาย และ Error ไม่เกิด)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -96,6 +96,7 @@ with st.sidebar:
             
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
     
+    # ดึงค่าเริ่มต้นแบบปลอดภัย
     def_vals = {"Status": "Planning", "Dept": "Distri-Pro", "Activity": "", "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date()}
     
     if st.session_state.edit_mode and st.session_state.edit_index is not None:
@@ -106,14 +107,18 @@ with st.sidebar:
         except:
             st.session_state.edit_mode = False
 
+    # สร้าง Form แบบมีปุ่ม Submit ชัดเจน
     with st.form("action_form"):
         status_opts = ["Planning", "In Progress", "Completed", "Delayed"]
         f_status = st.selectbox("Status", status_opts, index=status_opts.index(def_vals["Status"]) if def_vals["Status"] in status_opts else 0)
+        
         dept_list = list(DEPT_COLORS.keys())
         f_dept = st.selectbox("Department", dept_list, index=dept_list.index(def_vals["Dept"]) if def_vals["Dept"] in dept_list else 0)
+        
         f_activity = st.text_area("Action Plan & Activity", value=def_vals["Activity"])
         
         c_p = st.columns(2)
+        # แก้ไขจุดที่เกิด AttributeError (บรรทัดที่ 117 ในรูป)
         f_sales = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(def_vals["Sales PIC"]) if def_vals["Sales PIC"] in SALES_LIST else 0)
         f_eng = c_p.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(def_vals["Eng PIC"]) if def_vals["Eng PIC"] in ENG_LIST else 0)
         
@@ -127,19 +132,27 @@ with st.sidebar:
         f_start = c_d.date_input("Start Date", value=def_vals["Start Date"])
         f_end = c_d.date_input("End Date", value=def_vals["End Date"])
 
+        # ปุ่มบันทึก (ต้องอยู่ท้ายสุดภายใน st.form)
         submitted = st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True)
+        
         if submitted:
+            # Auto-Progress logic
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
             final_progress = df.iloc[st.session_state.edit_index]['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
+            
             new_row = {"Dept": f_dept, "Activity": f_activity, "Sales PIC": f_sales, "Eng PIC": f_eng, "Status": f_status, "Progress": final_progress, "Start Date": f_start, "End Date": f_end, "Priority": f_priority, "Project Status": f_pstat}
+            
             if st.session_state.edit_mode:
                 df.iloc[st.session_state.edit_index] = new_row
                 st.session_state.edit_mode = False
+                st.session_state.edit_index = None
             else:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-            save_data(df); st.rerun()
+            save_data(df)
+            st.success("บันทึกสำเร็จ!")
+            st.rerun()
 
-# 7. รายละเอียดแผนงาน (Bottom Section)
+# 7. รายละเอียดแผนงาน
 if not df.empty:
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(df)} รายการ)")
     for index, row in df.iterrows():
