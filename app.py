@@ -44,7 +44,7 @@ with st.sidebar:
     st.image("https://flaticon.com", width=100)
     st.header("📋 เพิ่มแผนงานใหม่")
     with st.form("action_form", clear_on_submit=True):
-        dept = st.selectbox("Department", ["BCP-ENG", "Sales", "Marketing", "HR"])
+        dept = st.selectbox("Department", ["Distri-Pro", "Post", "Broadcast", "Residential", "Cinema", "ENG-Center"])
         activity = st.text_area("Action Plan & Activity")
         target = st.text_area("Target / Objective")
         pic = st.text_input("PIC (ผู้รับผิดชอบ)")
