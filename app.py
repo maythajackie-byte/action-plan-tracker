@@ -7,46 +7,30 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี (เน้นความชัดเจนของตัวอักษรในกล่องขาว) ---
+# --- CSS ปรับแต่งสี (ตัวหนังสือดำเข้มในกล่องขาว) ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
     [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label { color: white !important; }
+    [data-testid="stMetric"] { background-color: #ffffff !important; padding: 20px; border-radius: 12px; border-left: 8px solid #0b5345; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    [data-testid="stMetricLabel"] { color: #0b5345 !important; font-size: 1.1rem !important; font-weight: 600 !important; }
+    [data-testid="stMetricValue"] { color: #1a1a1a !important; font-weight: bold !important; }
     
-    /* กล่อง Metric 3 กล่องด้านบน */
-    [data-testid="stMetric"] {
-        background-color: #ffffff !important;
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 8px solid #0b5345;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    
-    /* กล่องรายการรายละเอียด (Expander) */
-    div[data-testid="stExpander"] {
-        background-color: white !important;
-        border: 1px solid #0b5345 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-    }
-    
-    /* แก้สีตัวอักษรใน Expander ไม่ให้กลืนกับพื้น */
+    /* กล่องรายละเอียดสีขาว */
+    div[data-testid="stExpander"] { background-color: white !important; border: 1px solid #0b5345 !important; border-radius: 12px !important; }
     div[data-testid="stExpander"] p, div[data-testid="stExpander"] span, div[data-testid="stExpander"] label {
-        color: #1a1a1a !important; /* สีดำเข้ม */
+        color: #1a1a1a !important; /* ตัวหนังสือสีดำเข้ม */
     }
-    
-    /* สีหัวข้อใน Expander */
-    div[data-testid="stExpander"] b, div[data-testid="stExpander"] h5 {
-        color: #0b5345 !important; /* สีเขียวเข้ม */
-    }
+    div[data-testid="stExpander"] b { color: #0b5345 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. ข้อมูลพื้นฐาน
+# 2. ข้อมูลพนักงานและสีแผนก
 DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60", "Residential": "#f39c12", "Cinema": "#e74c3c", "ENG-Center": "#2c3e50"}
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
+# 3. จัดการข้อมูล
 DATA_FILE = "action_plan_2026.csv"
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -59,31 +43,32 @@ def load_data():
         return df_loaded
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
-def save_data(df_to_save): df_to_save.to_csv(DATA_FILE, index=False)
+def save_data(df_to_save):
+    df_to_save.to_csv(DATA_FILE, index=False)
+
 df = load_data()
 
+# จัดการโหมดแก้ไข
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# --- 3. หน้าปก ---
+# 4. ส่วนหน้าปก และ สรุปภาพรวม (Metrics & Graphs ย้ายขึ้นบน)
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
-# 4. ส่วนสรุปผล (ขยับขึ้นมาด้านบน)
 if not df.empty:
+    # --- Metrics ---
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
     m2.metric("📈 ความคืบหน้าเฉลี่ย", f"{df['Progress'].mean():.1f}%")
     m3.metric("🚨 งานด่วนพิเศษ (P0)", f"{len(df[df['Project Status'] == 'P0'])} รายการ")
-
+    
     st.markdown("---")
     
-    # กราฟขยับขึ้นมาด้านบน
+    # --- Graphs ---
     cg1, cg2 = st.columns(2)
     with cg1:
         st.subheader("📈 Timeline")
         fig = px.timeline(df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
-        fig.update_yaxes(autorange="reversed", tickfont=dict(color='white'))
-        fig.update_xaxes(tickfont=dict(color='white'))
         fig.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
     with cg2:
@@ -94,40 +79,50 @@ if not df.empty:
 
 st.markdown("---")
 
-# 5. Sidebar (Input Form)
+# 5. Sidebar (Input Form - แก้ Error ให้เสถียร)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
             st.session_state.edit_mode = False; st.session_state.edit_index = None; st.rerun()
-    
+            
     st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
-    val = df.iloc[st.session_state.edit_index] if st.session_state.edit_mode and st.session_state.edit_index is not None else None
-
+    
+    val = None
+    if st.session_state.edit_mode and st.session_state.edit_index is not None:
+        val = df.iloc[st.session_state.edit_index]
+        
     with st.form("action_form", clear_on_submit=True):
         status_opts = ["Planning", "In Progress", "Completed", "Delayed"]
         status = st.selectbox("Status", status_opts, index=status_opts.index(val['Status']) if val is not None else 0)
         
-        auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
-        progress_val = val['Progress'] if val is not None else auto_map.get(status, 0)
-
         dept_list = list(DEPT_COLORS.keys())
         dept = st.selectbox("Department", dept_list, index=dept_list.index(val['Dept']) if val is not None else 0)
         activity = st.text_area("Action Plan & Activity", value=val['Activity'] if val is not None else "")
         
-        c_pic = st.columns(2)
-        sales_p = c_pic.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(val['Sales PIC']) if val is not None else 0)
-        eng_p = c_pic.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(val['Eng PIC']) if val is not None else 0)
+        c_p = st.columns(2)
+        # แก้ไขจุดที่เกิด AttributeError
+        s_val = val['Sales PIC'] if val is not None else "None"
+        sales_p = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(s_val) if s_val in SALES_LIST else 0)
         
-        c_info = st.columns(2)
-        priority = c_info.selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(val['Priority']) if val is not None else 1)
-        p_status = c_info.selectbox("Project Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(val['Project Status']) if val is not None else 1)
+        e_val = val['Eng PIC'] if val is not None else "None"
+        eng_p = c_p.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(e_val) if e_val in ENG_LIST else 0)
         
-        c_date = st.columns(2)
-        start_d = c_date.date_input("Start Date", value=val['Start Date'] if val is not None else datetime.now().date())
-        end_d = c_date.date_input("End Date", value=val['End Date'] if val is not None else datetime.now().date())
+        c_i = st.columns(2)
+        priority = c_i.selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(val['Priority']) if val is not None else 1)
+        p_status = c_i.selectbox("Project Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(val['Project Status']) if val is not None else 1)
+        
+        c_d = st.columns(2)
+        start_d = c_d.date_input("Start Date", value=val['Start Date'] if val is not None else datetime.now().date())
+        end_d = c_d.date_input("End Date", value=val['End Date'] if val is not None else datetime.now().date())
 
+        # ปุ่มบันทึกข้อมูล (Submit Button)
         if st.form_submit_button("💾 บันทึกข้อมูล"):
-            new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": progress_val, "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status}
+            # Auto-Progress logic
+            auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
+            final_progress = val['Progress'] if val is not None else auto_map.get(status, 0)
+            
+            new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": final_progress, "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status}
+            
             if st.session_state.edit_mode:
                 df.iloc[st.session_state.edit_index] = new_row
                 st.session_state.edit_mode = False
@@ -135,24 +130,25 @@ with st.sidebar:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df); st.rerun()
 
-# 6. รายละเอียดแผนงาน (อยู่ด้านล่างสุด)
+# 6. รายละเอียดแผนงาน (ด้านล่าง)
 if not df.empty:
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(df)} รายการ)")
     for index, row in df.iterrows():
         header_label = f"📌 [{row['Project Status']}] {row['Dept']} | {row['Progress']}% | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."
-        
         with st.expander(header_label):
             ca, cb, cc = st.columns([2.5, 1.2, 1.2])
             with ca:
                 st.markdown("##### 📋 รายละเอียดกิจกรรม")
-                st.info(row['Activity']) 
+                st.info(row['Activity'])
             with cb:
-                st.markdown("**สถานะ:** " + row['Status'])
-                st.markdown(f"**ความคืบหน้า:** {row['Progress']}%")
-                if st.button(f"✏️ แก้ไขข้อมูล", key=f"ed_{index}"):
+                st.write(f"**สถานะ:** {row['Status']}")
+                st.write(f"**ความคืบหน้า:** {row['Progress']}%")
+                if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
                     st.session_state.edit_index = index; st.session_state.edit_mode = True; st.rerun()
             with cc:
-                st.markdown("**Timeline:**")
+                st.write(f"**Timeline:**")
                 st.caption(f"{row['Start Date']} ถึง {row['End Date']}")
-                if st.button(f"🗑️ ลบรายการนี้", key=f"dl_{index}"):
+                if st.button(f"🗑️ ลบรายการ", key=f"dl_{index}"):
                     df = df.drop(index); save_data(df); st.rerun()
+else:
+    st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
