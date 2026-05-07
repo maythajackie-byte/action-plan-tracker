@@ -50,7 +50,7 @@ if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 # --- 4. ส่วนหัวของหน้าเว็บ (แบบใหม่: หน้าปกอยู่บนสุด ไม่มีไอคอนเสีย) ---
 
 # 1. รูปหน้าปก (Banner) ขนาดใหญ่ อยู่บนสุดของจอ
-st.image("https://squarespace-cdn.com", use_container_width=True)
+st.image("https://www.nimblework.com/wp-content/uploads/2024/05/Action-plan.png", use_container_width=True)
 
 # 2. ชื่อโปรเจกต์ (Title) แสดงผลถัดลงมา
 st.title("📋 2026 Follow up & Action Plan")
