@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- ปรับแต่ง CSS (ตัวหนังสือขาวในกราฟ และกล่อง Dropdown สีขาว) ---
+# --- CSS ปรับแต่งสี (เน้นสีขาวชัดเจน) ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
@@ -104,41 +104,50 @@ if not df.empty:
                      (df["Dept"].isin(f_dept)) & 
                      (df["Project Status"].isin(f_pstat))]
 
-    # 8. กราฟ
+    # 8. กราฟ (ตัวหนังสือสีขาวทุกจุด)
     cg1, cg2 = st.columns(2)
     with cg1:
         st.subheader("📈 Timeline (ตามแผนก)")
         fig = px.timeline(filtered_df, x_start="Start Date", x_end="End Date", y="Activity", color="Dept", text="Progress", color_discrete_map=DEPT_COLORS)
         fig.update_yaxes(autorange="reversed", tickfont=dict(color='white'))
         fig.update_xaxes(tickfont=dict(color='white'))
-        fig.update_layout(font=dict(color="white"), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        # บังคับสี Legend และ Font ทั้งหมดเป็นสีขาว
+        fig.update_layout(
+            font=dict(color="white"),
+            legend=dict(font=dict(color="white")),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
         st.plotly_chart(fig, use_container_width=True)
     with cg2:
         st.subheader("📊 สัดส่วนงาน")
         fig_p = px.pie(filtered_df, names="Dept", hole=0.4, color="Dept", color_discrete_map=DEPT_COLORS)
-        fig_p.update_layout(font=dict(color="white"), paper_bgcolor='rgba(0,0,0,0)')
+        # บังคับสี Legend และ Font ทั้งหมดเป็นสีขาว
+        fig_p.update_layout(
+            font=dict(color="white"),
+            legend=dict(font=dict(color="white")),
+            paper_bgcolor='rgba(0,0,0,0)'
+        )
         st.plotly_chart(fig_p, use_container_width=True)
 
     st.markdown("---")
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(filtered_df)} รายการ)")
     for index, row in filtered_df.iterrows():
-        # แก้ไขจุดที่เคย Error โดยระบุจำนวนคอลัมน์ st.columns(3)
         with st.expander(f"📌 [{row['Project Status']}] {row['Dept']} | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."):
             ca, cb, cc = st.columns(3)
             with ca: st.write(f"**กิจกรรม:** {row['Activity']}")
             with cb:
                 st.write(f"**Progress:** {row['Progress']}%")
                 if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
-                    # ค้นหา index ที่ถูกต้อง
                     act_val = row['Activity']
-                    real_idx = df.index[df['Activity'] == act_val].tolist()[0]
+                    real_idx = df.index[df['Activity'] == act_val].tolist()
                     st.session_state.edit_index = real_idx
                     st.session_state.edit_mode = True; st.rerun()
             with cc:
                 st.write(f"**Status:** {row['Status']}")
                 if st.button(f"🗑️ ลบ", key=f"dl_{index}"):
                     act_val = row['Activity']
-                    real_idx = df.index[df['Activity'] == act_val].tolist()[0]
+                    real_idx = df.index[df['Activity'] == act_val].tolist()
                     df = df.drop(real_idx); save_data(df); st.rerun()
 else:
     st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
