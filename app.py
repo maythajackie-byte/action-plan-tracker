@@ -54,7 +54,7 @@ if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
 # --- 4. ส่วนหน้าปก (Cover Image) ---
-st.image("https://images.squarespace-cdn.com/content/v1/6022f791cf4a4d20ccfcd9c4/1720041912442-BKASDM2GXDEANYX4LG4Q/Capture.PNG", use_container_width=200)
+st.image("https://images.squarespace-cdn.com/content/v1/6022f791cf4a4d20ccfcd9c4/1720041912442-BKASDM2GXDEANYX4LG4Q/Capture.PNG", use_container_width=50)
 
 c_t1, c_t2 = st.columns([0.1, 0.9])
 with c_t1: st.image("https://flaticon.com", width=70)
