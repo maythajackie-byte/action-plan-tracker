@@ -54,7 +54,7 @@ c_t1, c_t2 = st.columns([0.1, 0.9])
 with c_t1: st.image("https://flaticon.com", width=70)
 with c_t2: st.title("2026 Follow up & Action Plan")
 
-# 5. Metrics (3 กรอบขาว)
+# 5. Metrics
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
@@ -83,13 +83,16 @@ with st.sidebar:
         progress = st.slider("Progress (%)", 0, 100, int(val['Progress']) if val is not None else 0)
         if st.form_submit_button("💾 บันทึกข้อมูล"):
             new_row = {"Dept": dept, "Activity": activity, "Sales PIC": sales_p, "Eng PIC": eng_p, "Status": status, "Progress": progress, "Start Date": start_d, "End Date": end_d, "Priority": priority, "Project Status": p_status}
-            if st.session_state.edit_mode: df.iloc[st.session_state.edit_index] = new_row; st.session_state.edit_mode = False
-            else: df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            if st.session_state.edit_mode: 
+                df.iloc[st.session_state.edit_index] = new_row
+                st.session_state.edit_mode = False
+            else: 
+                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df); st.rerun()
     if st.session_state.edit_mode and st.button("❌ ยกเลิกการแก้ไข"):
         st.session_state.edit_mode = False; st.rerun()
 
-# 7. --- ระบบตัวกรอง (Filter) ค้นหา, แผนก, P-Status ---
+# 7. --- ระบบตัวกรอง (Filter) ---
 if not df.empty:
     st.subheader("🔍 ค้นหาและตัวกรอง")
     f1, f2, f3 = st.columns(3)
@@ -97,12 +100,11 @@ if not df.empty:
     f_dept = f2.multiselect("🏢 เลือกแผนก", options=df["Dept"].unique(), default=df["Dept"].unique())
     f_pstat = f3.multiselect("🚨 สถานะ P-Status", options=["P0", "P1", "P2", "P3"], default=["P0", "P1", "P2", "P3"])
     
-    # กรองข้อมูล
     filtered_df = df[(df["Activity"].str.contains(search, case=False, na=False)) & 
                      (df["Dept"].isin(f_dept)) & 
                      (df["Project Status"].isin(f_pstat))]
 
-    # 8. กราฟ (ตัวหนังสือสีขาว)
+    # 8. กราฟ
     cg1, cg2 = st.columns(2)
     with cg1:
         st.subheader("📈 Timeline (ตามแผนก)")
@@ -120,19 +122,23 @@ if not df.empty:
     st.markdown("---")
     st.subheader(f"📄 รายละเอียดแผนงาน ({len(filtered_df)} รายการ)")
     for index, row in filtered_df.iterrows():
-        # หา Index จริงเพื่อใช้แก้/ลบ
-        real_idx = df.index[df['Activity'] == row['Activity']].tolist()[0]
+        # แก้ไขจุดที่เคย Error โดยระบุจำนวนคอลัมน์ st.columns(3)
         with st.expander(f"📌 [{row['Project Status']}] {row['Dept']} | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."):
-            ca, cb, cc = st.columns(3) # ใส่เลข 3 เพื่อแก้ Error
+            ca, cb, cc = st.columns(3)
             with ca: st.write(f"**กิจกรรม:** {row['Activity']}")
             with cb:
                 st.write(f"**Progress:** {row['Progress']}%")
                 if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
+                    # ค้นหา index ที่ถูกต้อง
+                    act_val = row['Activity']
+                    real_idx = df.index[df['Activity'] == act_val].tolist()[0]
                     st.session_state.edit_index = real_idx
                     st.session_state.edit_mode = True; st.rerun()
             with cc:
                 st.write(f"**Status:** {row['Status']}")
                 if st.button(f"🗑️ ลบ", key=f"dl_{index}"):
+                    act_val = row['Activity']
+                    real_idx = df.index[df['Activity'] == act_val].tolist()[0]
                     df = df.drop(real_idx); save_data(df); st.rerun()
 else:
     st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
