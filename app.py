@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Action Plan 2026", layout="wide")
 
-# --- CSS ปรับแต่งสี (ตัวหนังสือดำเข้มในกล่องขาว) ---
+# --- CSS ปรับแต่งสี ---
 st.markdown("""
     <style>
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
@@ -15,22 +15,18 @@ st.markdown("""
     [data-testid="stMetric"] { background-color: #ffffff !important; padding: 20px; border-radius: 12px; border-left: 8px solid #0b5345; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     [data-testid="stMetricLabel"] { color: #0b5345 !important; font-size: 1.1rem !important; font-weight: 600 !important; }
     [data-testid="stMetricValue"] { color: #1a1a1a !important; font-weight: bold !important; }
-    
-    /* กล่องรายละเอียดสีขาว */
     div[data-testid="stExpander"] { background-color: white !important; border: 1px solid #0b5345 !important; border-radius: 12px !important; }
-    div[data-testid="stExpander"] p, div[data-testid="stExpander"] span, div[data-testid="stExpander"] label {
-        color: #1a1a1a !important; 
-    }
+    div[data-testid="stExpander"] p, div[data-testid="stExpander"] span, div[data-testid="stExpander"] label { color: #1a1a1a !important; }
     div[data-testid="stExpander"] b { color: #0b5345 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. ข้อมูลพนักงานและแผนก
+# 2. ข้อมูลพื้นฐาน
 DEPT_COLORS = {"Distri-Pro": "#3498db", "Post": "#8e44ad", "Broadcast": "#27ae60", "Residential": "#f39c12", "Cinema": "#e74c3c", "ENG-Center": "#2c3e50"}
 SALES_LIST = ["None", "CB : Chanunkarn", "AW : Apasri", "TH : Thanyhathorn"]
 ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : Maytha", "KC : Kiattisak", "DR : Danuphop", "SB : Sarawut", "KL : Kongphop", "DS : Decha", "PT : Patjitra", "WS : Worawut", "RO : Ronnarit", "NI : Nutwarot", "SK : Sirisak", "KI : Kathathep", "CA : Chatchawan", "NM : Nithithorn", "PA : Phaisan", "CN : Chainarong", "PH : Parawee", "TC : Totsapol", "WO : Watcharakorn", "VP : Veeraphat", "MK : Monrak", "PL : Preecha", "NC : Nattipong"]
 
-# 3. จัดการข้อมูล (Safe Load)
+# 3. จัดการข้อมูล (Safe Mode)
 DATA_FILE = "action_plan_2026.csv"
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -42,7 +38,8 @@ def load_data():
             df_loaded['Start Date'] = pd.to_datetime(df_loaded['Start Date'], errors='coerce').dt.date
             df_loaded['End Date'] = pd.to_datetime(df_loaded['End Date'], errors='coerce').dt.date
             return df_loaded.fillna("None")
-        except: pass
+        except:
+            return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
 def save_data(df_to_save):
@@ -50,20 +47,20 @@ def save_data(df_to_save):
 
 df = load_data()
 
-# Session State สำหรับโหมดแก้ไข
+# จัดการโหมดแก้ไข
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# --- 4. ส่วนหน้าปกและ Title (Top Section) ---
+# --- 4. ส่วนหัวของหน้าเว็บ (หน้าปก และ Title) ---
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
-col_title1, col_title2 = st.columns([0.1, 0.9])
-with col_title1:
+col_t1, col_t2 = st.columns([0.1, 0.9])
+with col_t1:
     st.image("https://flaticon.com", width=70)
-with col_title2:
+with col_t2:
     st.title("2026 Follow up & Action Plan")
 
-# 5. สรุปภาพรวม (Metrics & Graphs)
+# 5. ส่วนสรุปภาพรวม (Metrics & Graphs)
 if not df.empty:
     m1, m2, m3 = st.columns(3)
     m1.metric("📊 จำนวนงานทั้งหมด", f"{len(df)} รายการ")
@@ -89,7 +86,7 @@ if not df.empty:
 
 st.markdown("---")
 
-# 6. Sidebar (Input Form - แก้ Error และปุ่มบันทึก)
+# 6. Sidebar (แก้ไขจุดที่ Error และปุ่มบันทึก)
 with st.sidebar:
     if st.session_state.edit_mode:
         if st.button("⬅️ Back to Add Mode", use_container_width=True):
@@ -116,22 +113,58 @@ with st.sidebar:
         
         f_activity = st.text_area("Action Plan & Activity", value=str(dv["Activity"]))
         
+        # แก้ไขจุดที่เกิด AttributeError: ใช้ col[0] และ col[1]
         c_p = st.columns(2)
-        f_sales = c_p.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(str(dv["Sales PIC"])) if str(dv["Sales PIC"]) in SALES_LIST else 0)
-        f_eng = c_p.selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(str(dv["Eng PIC"])) if str(dv["Eng PIC"]) in ENG_LIST else 0)
+        sales_val = str(dv["Sales PIC"])
+        f_sales = c_p[0].selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(sales_val) if sales_val in SALES_LIST else 0)
+        eng_val = str(dv["Eng PIC"])
+        f_eng = c_p[1].selectbox("Engineer PIC", ENG_LIST, index=ENG_LIST.index(eng_val) if eng_val in ENG_LIST else 0)
         
         c_i = st.columns(2)
-        f_priority = c_i.selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(str(dv["Priority"])) if str(dv["Priority"]) in ["High", "Medium", "Low"] else 1)
-        f_pstat = c_i.selectbox("Project Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(str(dv["Project Status"])) if str(dv["Project Status"]) in ["P0", "P1", "P2", "P3"] else 1)
+        prio_list = ["High", "Medium", "Low"]
+        f_priority = c_i[0].selectbox("Priority", prio_list, index=prio_list.index(str(dv["Priority"])) if str(dv["Priority"]) in prio_list else 1)
+        ps_list = ["P0", "P1", "P2", "P3"]
+        f_pstat = c_i[1].selectbox("Project Status", ps_list, index=ps_list.index(str(dv["Project Status"])) if str(dv["Project Status"]) in ps_list else 1)
         
         c_d = st.columns(2)
-        f_start = c_d.date_input("Start Date", value=dv["Start Date"])
-        f_end = c_d.date_input("End Date", value=dv["End Date"])
+        f_start = c_d[0].date_input("Start Date", value=dv["Start Date"])
+        f_end = c_d[1].date_input("End Date", value=dv["End Date"])
 
-        # ปุ่มบันทึก (ต้องอยู่ภายใน st.form)
-        if st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True):
+        # ปุ่มบันทึก (ต้องอยู่ภายในบล็อก with st.form)
+        submitted = st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True)
+        
+        if submitted:
             auto_map = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
             final_prog = dv['Progress'] if st.session_state.edit_mode else auto_map.get(f_status, 0)
             new_row = {"Dept": f_dept, "Activity": f_activity, "Sales PIC": f_sales, "Eng PIC": f_eng, "Status": f_status, "Progress": final_prog, "Start Date": f_start, "End Date": f_end, "Priority": f_priority, "Project Status": f_pstat}
             if st.session_state.edit_mode:
                 df.iloc[st.session_state.edit_index] = new_row
+                st.session_state.edit_mode = False
+                st.session_state.edit_index = None
+            else:
+                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            save_data(df)
+            st.rerun()
+
+# 7. รายละเอียดแผนงาน
+if not df.empty:
+    st.subheader(f"📄 รายละเอียดแผนงาน ({len(df)} รายการ)")
+    for index, row in df.iterrows():
+        header_label = f"📌 [{row['Project Status']}] {row['Dept']} | {row['Progress']}% | S: {row['Sales PIC']} E: {row['Eng PIC']} - {row['Activity'][:40]}..."
+        with st.expander(header_label):
+            ca, cb, cc = st.columns([2.5, 1.2, 1.2])
+            with ca:
+                st.markdown("##### 📋 รายละเอียดกิจกรรม")
+                st.info(row['Activity'])
+            with cb:
+                st.write(f"**สถานะ:** {row['Status']}")
+                st.write(f"**ความคืบหน้า:** {row['Progress']}%")
+                if st.button(f"✏️ แก้ไข", key=f"ed_{index}"):
+                    st.session_state.edit_index = index; st.session_state.edit_mode = True; st.rerun()
+            with cc:
+                st.write(f"**Timeline:**")
+                st.caption(f"{row['Start Date']} ถึง {row['End Date']}")
+                if st.button(f"🗑️ ลบรายการ", key=f"dl_{index}"):
+                    df = df.drop(index); save_data(df); st.rerun()
+else:
+    st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
