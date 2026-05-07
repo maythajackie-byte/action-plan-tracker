@@ -146,6 +146,5 @@ with st.sidebar:
             else:
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(df); st.rerun()
-
 else:
     st.info("กรุณากรอกข้อมูลที่ Sidebar ครับ")
