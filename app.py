@@ -47,16 +47,16 @@ df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
-# --- 4. ส่วนหัวของหน้าเว็บ (ใส่รูปหน้าปกแทนไอคอนที่เสีย) ---
+# --- 4. ส่วนหัวของหน้าเว็บ (แบบใหม่: หน้าปกอยู่บนสุด ไม่มีไอคอนเสีย) ---
 
-# รูป Banner หน้าปกอยู่บนสุด (ใช้ URL ที่คุณให้มา)
+# 1. รูปหน้าปก (Banner) ขนาดใหญ่ อยู่บนสุดของจอ
 st.image("https://squarespace-cdn.com", use_container_width=True)
 
-# ชื่อ Title และ Subtitle (ไม่มีไอคอนเสียกวนใจ)
+# 2. ชื่อโปรเจกต์ (Title) แสดงผลถัดลงมา
 st.title("📋 2026 Follow up & Action Plan")
 st.markdown("### **Project Dashboard | Engineer Center**")
 
-st.markdown("---")
+st.markdown("---") # เส้นคั่นเพื่อความสวยงาม
 
 # --- 5. สรุปภาพรวม (Metrics & Graphs) ---
 if not df.empty:
