@@ -1,3 +1,3 @@
-textstreamlit
+streamlit
 pandas
 plotly
