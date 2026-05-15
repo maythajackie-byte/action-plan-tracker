@@ -128,7 +128,7 @@ if not df.empty:
 
 # --- 6.5 ตาราง MA/MT ดึงข้อมูลจาก Excel อัตโนมัติ ---
 st.markdown("---")
-st.subheader("🛠️ MA & MT Tracking Plan (2024-2025)")
+st.subheader("🛠️ MA & MT Tracking Plan (2026)")
 
 if df_ma.empty:
     st.info("ยังไม่มีข้อมูล MA/MT กรุณาอัปโหลดไฟล์ Excel ที่แถบเมนูด้านซ้ายมือครับ (ต้องมีหัว Column: Project / Customer, Category, Last MA, Next MA, Status)")
