@@ -110,61 +110,55 @@ if not df.empty:
         fig_p.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_p, use_container_width=True)
 
-        
-# --- เริ่มโค้ดสำหรับวางใน Streamlit ---
-st.markdown("""
-<div style="background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px;">
-    <h2 style="color: #0b5345; margin-top: 0;">08: MA & MT Tracking Plan (2024-2025)</h2>
-    <p style="color: #444; font-size: 16px;">ระบบบริหารจัดการและติดตามแผนการบำรุงรักษาระบบ (Maintenance Agreement) ของลูกค้าอย่างต่อเนื่อง</p>
-    
-    <table style="width:100%; border-collapse: collapse; text-align: left; font-family: sans-serif; margin-top: 15px;">
-        <tr style="background-color: #0b5345; color: white;">
-            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Project / Customer</th>
-            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Category</th>
-            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Last MA</th>
-            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Next MA</th>
-            <th style="padding: 12px; border-bottom: 2px solid #ddd; text-align: center;">Status</th>
-        </tr>
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 12px; color: #1a1a1a;">Amarin VSN - ONE (DR-site)</td>
-            <td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
-            <td style="padding: 12px; color: #1a1a1a;">4-Sep-25</td>
-            <td style="padding: 12px; color: #1a1a1a;">29-Sep-25</td>
-            <td style="padding: 12px; text-align: center;">
-                <span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
-            </td>
-        </tr>
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 12px; color: #1a1a1a;">Amarin VSN - MAM (PRO)</td>
-            <td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
-            <td style="padding: 12px; color: #1a1a1a;">16-Sep-25</td>
-            <td style="padding: 12px; color: #dc3545; font-weight: bold;">Run out</td>
-            <td style="padding: 12px; text-align: center;">
-                <span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
-            </td>
-        </tr>
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 12px; color: #1a1a1a;">Amarin Norwia</td>
-            <td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
-            <td style="padding: 12px; color: #1a1a1a;">3-Apr-25</td>
-            <td style="padding: 12px; color: #1a1a1a;">10-Oct-25</td>
-            <td style="padding: 12px; text-align: center;">
-                <span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
-            </td>
-        </tr>
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 12px; color: #1a1a1a;">Kantana Post (Projector)</td>
-            <td style="padding: 12px;"><span style="color: #3498db; font-weight: bold;">MT Project</span></td>
-            <td style="padding: 12px; color: #1a1a1a;">12-Sep-24</td>
-            <td style="padding: 12px; color: #d35400; font-weight: bold;">22-Sep-25</td>
-            <td style="padding: 12px; text-align: center;">
-                <span style="background-color: #ffc107; color: black; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Pending</span>
-            </td>
-        </tr>
-    </table>
-</div>
-""", unsafe_allow_html=True)
-# --- สิ้นสุดโค้ด ---
+st.markdown("""<div style="background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px;">
+<h2 style="color: #0b5345; margin-top: 0;">08: MA & MT Tracking Plan (2024-2025)</h2>
+<p style="color: #444; font-size: 16px;">ระบบบริหารจัดการและติดตามแผนการบำรุงรักษาระบบ (Maintenance Agreement) ของลูกค้าอย่างต่อเนื่อง</p>
+<table style="width:100%; border-collapse: collapse; text-align: left; font-family: sans-serif; margin-top: 15px;">
+<tr style="background-color: #0b5345; color: white;">
+<th style="padding: 12px; border-bottom: 2px solid #ddd;">Project / Customer</th>
+<th style="padding: 12px; border-bottom: 2px solid #ddd;">Category</th>
+<th style="padding: 12px; border-bottom: 2px solid #ddd;">Last MA</th>
+<th style="padding: 12px; border-bottom: 2px solid #ddd;">Next MA</th>
+<th style="padding: 12px; border-bottom: 2px solid #ddd; text-align: center;">Status</th>
+</tr>
+<tr style="border-bottom: 1px solid #eee;">
+<td style="padding: 12px; color: #1a1a1a;">Amarin VSN - ONE (DR-site)</td>
+<td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
+<td style="padding: 12px; color: #1a1a1a;">4-Sep-25</td>
+<td style="padding: 12px; color: #1a1a1a;">29-Sep-25</td>
+<td style="padding: 12px; text-align: center;">
+<span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
+</td>
+</tr>
+<tr style="border-bottom: 1px solid #eee;">
+<td style="padding: 12px; color: #1a1a1a;">Amarin VSN - MAM (PRO)</td>
+<td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
+<td style="padding: 12px; color: #1a1a1a;">16-Sep-25</td>
+<td style="padding: 12px; color: #dc3545; font-weight: bold;">Run out</td>
+<td style="padding: 12px; text-align: center;">
+<span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
+</td>
+</tr>
+<tr style="border-bottom: 1px solid #eee;">
+<td style="padding: 12px; color: #1a1a1a;">Amarin Norwia</td>
+<td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
+<td style="padding: 12px; color: #1a1a1a;">3-Apr-25</td>
+<td style="padding: 12px; color: #1a1a1a;">10-Oct-25</td>
+<td style="padding: 12px; text-align: center;">
+<span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
+</td>
+</tr>
+<tr style="border-bottom: 1px solid #eee;">
+<td style="padding: 12px; color: #1a1a1a;">Kantana Post (Projector)</td>
+<td style="padding: 12px;"><span style="color: #3498db; font-weight: bold;">MT Project</span></td>
+<td style="padding: 12px; color: #1a1a1a;">12-Sep-24</td>
+<td style="padding: 12px; color: #d35400; font-weight: bold;">22-Sep-25</td>
+<td style="padding: 12px; text-align: center;">
+<span style="background-color: #ffc107; color: black; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Pending</span>
+</td>
+</tr>
+</table>
+</div>""", unsafe_allow_html=True)
 
 # --- 7. ระบบ Filter ---
 st.markdown("---")
