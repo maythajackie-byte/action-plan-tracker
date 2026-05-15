@@ -65,7 +65,7 @@ def load_data():
         except: pass
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
-def save_data(df_s): df_s.to_csv(DATA_FILE, index=False)
+def save_data(df_s): df_s.to_exel(DATA_FILE, index=False)
 
 df = load_data()
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
