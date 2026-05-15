@@ -13,6 +13,10 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #0b5345; color: white; }
     [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label { color: white !important; }
     
+    /* สไตล์ Tabs ใน Sidebar */
+    div[data-testid="stTabs"] button { color: #1a1a1a; font-weight: 600; }
+    div[data-testid="stTabs"] button[aria-selected="true"] { color: #0b5345 !important; border-bottom-color: #0b5345 !important; }
+
     /* กล่องสรุปภาพรวม (Metrics) */
     [data-testid="stMetric"] {
         background-color: #ffffff !important;
@@ -21,14 +25,12 @@ st.markdown("""
         border-left: 8px solid #0b5345;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    /* บังคับสีหัวข้อในกล่องสรุป (Label) ให้เป็นสีเขียวเข้ม */
     [data-testid="stMetricLabel"] {
         color: #0b5345 !important;
         font-size: 1.1rem !important;
         font-weight: 600 !important;
         opacity: 1 !important;
     }
-    /* บังคับสีตัวเลขในกล่องสรุป (Value) ให้เป็นสีดำเข้ม */
     [data-testid="stMetricValue"] {
         color: #1a1a1a !important;
         font-weight: bold !important;
@@ -52,6 +54,8 @@ ENG_LIST = ["None", "CK : Chatchai", "BS : Boonchob", "PU : Pankrich", "MS : May
 
 # 3. จัดการข้อมูล (Safe Load)
 DATA_FILE = "action_plan_2026.csv"
+MA_EXCEL_FILE = "ma_plan_data.xlsx" # ไฟล์สำหรับเก็บข้อมูล MA/MT แบบ Excel
+
 def load_data():
     if os.path.exists(DATA_FILE):
         try:
@@ -65,9 +69,20 @@ def load_data():
         except: pass
     return pd.DataFrame(columns=["Dept", "Activity", "Sales PIC", "Eng PIC", "Status", "Progress", "Start Date", "End Date", "Priority", "Project Status"])
 
-def save_data(df_s): df_s.to_exel(DATA_FILE, index=False)
+def load_ma_data():
+    if os.path.exists(MA_EXCEL_FILE):
+        try:
+            return pd.read_excel(MA_EXCEL_FILE, engine='openpyxl').fillna("-")
+        except: pass
+    # โครงสร้างตาราง Default ถ้ายังไม่มีไฟล์
+    return pd.DataFrame(columns=["Project / Customer", "Category", "Last MA", "Next MA", "Status"])
+
+def save_data(df_s): df_s.to_csv(DATA_FILE, index=False) # แก้ไขจาก to_exel เป็น to_csv ให้ถูกต้อง
+def save_ma_data(df_m): df_m.to_excel(MA_EXCEL_FILE, index=False, engine='openpyxl')
 
 df = load_data()
+df_ma = load_ma_data()
+
 if 'edit_mode' not in st.session_state: st.session_state.edit_mode = False
 if 'edit_index' not in st.session_state: st.session_state.edit_index = None
 
@@ -110,55 +125,52 @@ if not df.empty:
         fig_p.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_p, use_container_width=True)
 
-st.markdown("""<div style="background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px;">
-<h2 style="color: #0b5345; margin-top: 0;">08: MA & MT Tracking Plan (2024-2025)</h2>
-<p style="color: #444; font-size: 16px;">ระบบบริหารจัดการและติดตามแผนการบำรุงรักษาระบบ (Maintenance Agreement) ของลูกค้าอย่างต่อเนื่อง</p>
-<table style="width:100%; border-collapse: collapse; text-align: left; font-family: sans-serif; margin-top: 15px;">
-<tr style="background-color: #0b5345; color: white;">
-<th style="padding: 12px; border-bottom: 2px solid #ddd;">Project / Customer</th>
-<th style="padding: 12px; border-bottom: 2px solid #ddd;">Category</th>
-<th style="padding: 12px; border-bottom: 2px solid #ddd;">Last MA</th>
-<th style="padding: 12px; border-bottom: 2px solid #ddd;">Next MA</th>
-<th style="padding: 12px; border-bottom: 2px solid #ddd; text-align: center;">Status</th>
-</tr>
-<tr style="border-bottom: 1px solid #eee;">
-<td style="padding: 12px; color: #1a1a1a;">Amarin VSN - ONE (DR-site)</td>
-<td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
-<td style="padding: 12px; color: #1a1a1a;">4-Sep-25</td>
-<td style="padding: 12px; color: #1a1a1a;">29-Sep-25</td>
-<td style="padding: 12px; text-align: center;">
-<span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
-</td>
-</tr>
-<tr style="border-bottom: 1px solid #eee;">
-<td style="padding: 12px; color: #1a1a1a;">Amarin VSN - MAM (PRO)</td>
-<td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
-<td style="padding: 12px; color: #1a1a1a;">16-Sep-25</td>
-<td style="padding: 12px; color: #dc3545; font-weight: bold;">Run out</td>
-<td style="padding: 12px; text-align: center;">
-<span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
-</td>
-</tr>
-<tr style="border-bottom: 1px solid #eee;">
-<td style="padding: 12px; color: #1a1a1a;">Amarin Norwia</td>
-<td style="padding: 12px;"><span style="color: #e74c3c; font-weight: bold;">MA Contract</span></td>
-<td style="padding: 12px; color: #1a1a1a;">3-Apr-25</td>
-<td style="padding: 12px; color: #1a1a1a;">10-Oct-25</td>
-<td style="padding: 12px; text-align: center;">
-<span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Done</span>
-</td>
-</tr>
-<tr style="border-bottom: 1px solid #eee;">
-<td style="padding: 12px; color: #1a1a1a;">Kantana Post (Projector)</td>
-<td style="padding: 12px;"><span style="color: #3498db; font-weight: bold;">MT Project</span></td>
-<td style="padding: 12px; color: #1a1a1a;">12-Sep-24</td>
-<td style="padding: 12px; color: #d35400; font-weight: bold;">22-Sep-25</td>
-<td style="padding: 12px; text-align: center;">
-<span style="background-color: #ffc107; color: black; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">Pending</span>
-</td>
-</tr>
-</table>
-</div>""", unsafe_allow_html=True)
+
+# --- 6.5 ตาราง MA/MT ดึงข้อมูลจาก Excel อัตโนมัติ ---
+st.markdown("---")
+st.subheader("🛠️ MA & MT Tracking Plan (2024-2025)")
+
+if df_ma.empty:
+    st.info("ยังไม่มีข้อมูล MA/MT กรุณาอัปโหลดไฟล์ Excel ที่แถบเมนูด้านซ้ายมือครับ (ต้องมีหัว Column: Project / Customer, Category, Last MA, Next MA, Status)")
+else:
+    # สร้าง HTML Table แบบไดนามิกจาก DataFrame
+    ma_html = """<div style="background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px;">
+    <p style="color: #444; font-size: 16px;">ระบบบริหารจัดการและติดตามแผนการบำรุงรักษาระบบ (Maintenance Agreement) ของลูกค้าอย่างต่อเนื่อง</p>
+    <table style="width:100%; border-collapse: collapse; text-align: left; font-family: sans-serif; margin-top: 15px;">
+    <tr style="background-color: #0b5345; color: white;">
+    <th style="padding: 12px; border-bottom: 2px solid #ddd;">Project / Customer</th>
+    <th style="padding: 12px; border-bottom: 2px solid #ddd;">Category</th>
+    <th style="padding: 12px; border-bottom: 2px solid #ddd;">Last MA</th>
+    <th style="padding: 12px; border-bottom: 2px solid #ddd;">Next MA</th>
+    <th style="padding: 12px; border-bottom: 2px solid #ddd; text-align: center;">Status</th>
+    </tr>"""
+
+    for _, row in df_ma.iterrows():
+        # ป้องกันค่า NaN
+        status = str(row.get('Status', '-')).strip()
+        category = str(row.get('Category', '-'))
+        next_ma = str(row.get('Next MA', '-'))
+        
+        # จัดสีตามข้อความ
+        next_ma_style = "color: #dc3545; font-weight: bold;" if next_ma.lower() == "run out" else "color: #1a1a1a;"
+        badge_bg = "#28a745" if status.lower() == "done" else "#ffc107" if status.lower() == "pending" else "#dc3545"
+        badge_color = "white" if status.lower() in ["done", "run out"] else "black"
+        cat_color = "#e74c3c" if "MA" in category else "#3498db"
+
+        ma_html += f"""
+        <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 12px; color: #1a1a1a;">{row.get('Project / Customer', '-')}</td>
+        <td style="padding: 12px;"><span style="color: {cat_color}; font-weight: bold;">{category}</span></td>
+        <td style="padding: 12px; color: #1a1a1a;">{row.get('Last MA', '-')}</td>
+        <td style="padding: 12px; {next_ma_style}">{next_ma}</td>
+        <td style="padding: 12px; text-align: center;">
+            <span style="background-color: {badge_bg}; color: {badge_color}; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">{status}</span>
+        </td>
+        </tr>"""
+    
+    ma_html += "</table></div>"
+    st.markdown(ma_html, unsafe_allow_html=True)
+
 
 # --- 7. ระบบ Filter ---
 st.markdown("---")
@@ -182,41 +194,64 @@ if not df.empty:
 else:
     filtered_df = df
 
-# --- 8. Sidebar ---
+
+# --- 8. Sidebar แบบมี Tabs ---
 with st.sidebar:
-    if st.session_state.edit_mode:
-        if st.button("⬅️ Back to Add Mode", use_container_width=True):
-            st.session_state.edit_mode = False; st.session_state.edit_index = None; st.rerun()
-    st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
-    dv = {"Status": "Planning", "Dept": "Distri-Pro", "Activity": "", "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date(), "Progress": 0}
-    if st.session_state.edit_mode and st.session_state.edit_index is not None:
-        try:
-            row_e = df.iloc[st.session_state.edit_index if isinstance(st.session_state.edit_index, int) else st.session_state.edit_index[0]]
-            for k in dv: dv[k] = row_e[k] if k in row_e else dv[k]
-        except: st.session_state.edit_mode = False
+    tab_action, tab_upload = st.tabs(["📝 Action Plan", "📁 อัปโหลด MA Excel"])
+    
+    # -------- Tab 1: จัดการ Action Plan --------
+    with tab_action:
+        if st.session_state.edit_mode:
+            if st.button("⬅️ Back to Add Mode", use_container_width=True):
+                st.session_state.edit_mode = False; st.session_state.edit_index = None; st.rerun()
+        st.header("📝 " + ("แก้ไขข้อมูล" if st.session_state.edit_mode else "เพิ่มแผนงานใหม่"))
+        dv = {"Status": "Planning", "Dept": "Distri-Pro", "Activity": "", "Sales PIC": "None", "Eng PIC": "None", "Priority": "Medium", "Project Status": "P1", "Start Date": datetime.now().date(), "End Date": datetime.now().date(), "Progress": 0}
+        if st.session_state.edit_mode and st.session_state.edit_index is not None:
+            try:
+                row_e = df.iloc[st.session_state.edit_index if isinstance(st.session_state.edit_index, int) else st.session_state.edit_index[0]]
+                for k in dv: dv[k] = row_e[k] if k in row_e else dv[k]
+            except: st.session_state.edit_mode = False
 
-    f_status = st.selectbox("Status", ["Planning", "In Progress", "Completed", "Delayed"], index=["Planning", "In Progress", "Completed", "Delayed"].index(str(dv["Status"])) if str(dv["Status"]) in ["Planning", "In Progress", "Completed", "Delayed"] else 0)
-    auto_m = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
-    f_progress = st.number_input("ความคืบหน้า (%)", 0, 100, int(dv["Progress"]) if st.session_state.edit_mode and f_status == dv["Status"] else auto_m.get(f_status, 0))
+        f_status = st.selectbox("Status", ["Planning", "In Progress", "Completed", "Delayed"], index=["Planning", "In Progress", "Completed", "Delayed"].index(str(dv["Status"])) if str(dv["Status"]) in ["Planning", "In Progress", "Completed", "Delayed"] else 0)
+        auto_m = {"Planning": 0, "In Progress": 50, "Completed": 100, "Delayed": 25}
+        f_progress = st.number_input("ความคืบหน้า (%)", 0, 100, int(dv["Progress"]) if st.session_state.edit_mode and f_status == dv["Status"] else auto_m.get(f_status, 0))
 
-    with st.form("action_form", clear_on_submit=True):
-        f_dept_in = st.selectbox("Department", list(DEPT_COLORS.keys()), index=list(DEPT_COLORS.keys()).index(str(dv["Dept"])) if str(dv["Dept"]) in DEPT_COLORS else 0)
-        f_act = st.text_area("Activity", value=str(dv["Activity"]))
-        c1, c2 = st.columns(2)
-        f_s = c1.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(str(dv["Sales PIC"])) if str(dv["Sales PIC"]) in SALES_LIST else 0)
-        f_e = c2.selectbox("Eng PIC", ENG_LIST, index=ENG_LIST.index(str(dv["Eng PIC"])) if str(dv["Eng PIC"]) in ENG_LIST else 0)
-        c3, c4 = st.columns(2)
-        f_prio = c3.selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(str(dv["Priority"])) if str(dv["Priority"]) in ["High", "Medium", "Low"] else 1)
-        f_ps = c4.selectbox("P-Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(str(dv["Project Status"])) if str(dv["Project Status"]) in ["P0", "P1", "P2", "P3"] else 1)
-        c5, c6 = st.columns(2)
-        f_start, f_end = c5.date_input("Start", dv["Start Date"]), c6.date_input("End", dv["End Date"])
-        if st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True):
-            new_r = {"Dept": f_dept_in, "Activity": f_act, "Sales PIC": f_s, "Eng PIC": f_e, "Status": f_status, "Progress": f_progress, "Start Date": f_start, "End Date": f_end, "Priority": f_prio, "Project Status": f_ps}
-            if st.session_state.edit_mode:
-                idx = st.session_state.edit_index if isinstance(st.session_state.edit_index, int) else st.session_state.edit_index[0]
-                df.iloc[idx] = new_r
-            else: df = pd.concat([df, pd.DataFrame([new_r])], ignore_index=True)
-            save_data(df); st.rerun()
+        with st.form("action_form", clear_on_submit=True):
+            f_dept_in = st.selectbox("Department", list(DEPT_COLORS.keys()), index=list(DEPT_COLORS.keys()).index(str(dv["Dept"])) if str(dv["Dept"]) in DEPT_COLORS else 0)
+            f_act = st.text_area("Activity", value=str(dv["Activity"]))
+            c1, c2 = st.columns(2)
+            f_s = c1.selectbox("Sales PIC", SALES_LIST, index=SALES_LIST.index(str(dv["Sales PIC"])) if str(dv["Sales PIC"]) in SALES_LIST else 0)
+            f_e = c2.selectbox("Eng PIC", ENG_LIST, index=ENG_LIST.index(str(dv["Eng PIC"])) if str(dv["Eng PIC"]) in ENG_LIST else 0)
+            c3, c4 = st.columns(2)
+            f_prio = c3.selectbox("Priority", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(str(dv["Priority"])) if str(dv["Priority"]) in ["High", "Medium", "Low"] else 1)
+            f_ps = c4.selectbox("P-Status", ["P0", "P1", "P2", "P3"], index=["P0", "P1", "P2", "P3"].index(str(dv["Project Status"])) if str(dv["Project Status"]) in ["P0", "P1", "P2", "P3"] else 1)
+            c5, c6 = st.columns(2)
+            f_start, f_end = c5.date_input("Start", dv["Start Date"]), c6.date_input("End", dv["End Date"])
+            
+            if st.form_submit_button("💾 บันทึกข้อมูล", use_container_width=True):
+                new_r = {"Dept": f_dept_in, "Activity": f_act, "Sales PIC": f_s, "Eng PIC": f_e, "Status": f_status, "Progress": f_progress, "Start Date": f_start, "End Date": f_end, "Priority": f_prio, "Project Status": f_ps}
+                if st.session_state.edit_mode:
+                    idx = st.session_state.edit_index if isinstance(st.session_state.edit_index, int) else st.session_state.edit_index[0]
+                    df.iloc[idx] = new_r
+                else: df = pd.concat([df, pd.DataFrame([new_r])], ignore_index=True)
+                save_data(df); st.rerun()
+
+    # -------- Tab 2: อัปโหลดไฟล์ Excel --------
+    with tab_upload:
+        st.header("📁 อัปโหลดข้อมูล MA/MT")
+        st.write("รองรับไฟล์ .xlsx ที่มีหัวข้อคอลัมน์ดังนี้:\n- Project / Customer\n- Category\n- Last MA\n- Next MA\n- Status")
+        uploaded_file = st.file_uploader("ลากไฟล์ Excel มาวางที่นี่", type=["xlsx", "xls"])
+        
+        if uploaded_file is not None:
+            try:
+                new_ma_df = pd.read_excel(uploaded_file, engine='openpyxl')
+                st.success("อ่านไฟล์สำเร็จ!")
+                if st.button("💾 บันทึกเข้าสู่ระบบตาราง", use_container_width=True):
+                    save_ma_data(new_ma_df)
+                    st.rerun()
+            except Exception as e:
+                st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์: {e}")
+
 
 # --- 9. รายละเอียดแผนงาน ---
 if not filtered_df.empty:
