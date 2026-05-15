@@ -110,6 +110,76 @@ if not df.empty:
         fig_p.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_p, use_container_width=True)
 
+<div class="slide-container" id="slide_ma_tracking">
+    <h2 class="slide-title">08: MA & MT Tracking Plan (2024-2025)</h2>
+    <div class="content-area">
+        <p style="margin-bottom: 25px; font-size: 22px;">
+            ระบบบริหารจัดการและติดตามแผนการบำรุงรักษาระบบ (Maintenance Agreement) ของลูกค้าอย่างต่อเนื่อง
+        </p>
+        
+        <div style="background: rgba(30, 41, 59, 0.7); border-radius: 12px; padding: 25px; border: 1px solid #4ade80; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <table style="width: 100%; border-collapse: collapse; font-size: 18px; margin-top: 0;">
+                <thead>
+                    <tr>
+                        <th style="padding: 15px; border-bottom: 2px solid #4ade80; color: #4ade80; background: transparent; font-size: 20px;">Project / Customer</th>
+                        <th style="padding: 15px; border-bottom: 2px solid #4ade80; color: #4ade80; background: transparent; font-size: 20px;">Category</th>
+                        <th style="padding: 15px; border-bottom: 2px solid #4ade80; color: #4ade80; background: transparent; font-size: 20px;">Scope</th>
+                        <th style="padding: 15px; border-bottom: 2px solid #4ade80; color: #4ade80; background: transparent; font-size: 20px;">Last MA</th>
+                        <th style="padding: 15px; border-bottom: 2px solid #4ade80; color: #4ade80; background: transparent; font-size: 20px;">Next MA</th>
+                        <th style="padding: 15px; border-bottom: 2px solid #4ade80; color: #4ade80; background: transparent; font-size: 20px; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">Amarin VSN - ONE (DR-site)</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);"><span style="color: #ef4444; font-weight: 500;">MA Contract</span></td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">2 Times/Year</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">4-Sep-25</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(234, 179, 8, 0.15); font-weight: 600; color: #fde047;">29-Sep-25</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;"><span style="background: #22c55e; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 16px; font-weight: 600;">Done</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">Amarin VSN - MAM (PRO)</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);"><span style="color: #ef4444; font-weight: 500;">MA Contract</span></td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">2 Times/Year</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">16-Sep-25</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(239, 68, 68, 0.2); font-weight: 600; color: #fca5a5;">Run out</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;"><span style="background: #22c55e; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 16px; font-weight: 600;">Done</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">Amarin Norwia</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);"><span style="color: #ef4444; font-weight: 500;">MA Contract</span></td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">2 Times/Year</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">3-Apr-25</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #67e8f9;">10-Oct-25</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;"><span style="background: #22c55e; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 16px; font-weight: 600;">Done</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">Kantana Post (Projector)</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);"><span style="color: #3b82f6; font-weight: 500;">MT Project</span></td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">MA Once 1 year</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">12-Sep-24</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(234, 179, 8, 0.15); font-weight: 600; color: #fde047;">22-Sep-25</td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;"><span style="background: #eab308; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 16px; font-weight: 600;">Pending</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; border-bottom: none;">TFA (Scanity)</td>
+                        <td style="padding: 15px; border-bottom: none;"><span style="color: #ef4444; font-weight: 500;">MA Contract</span></td>
+                        <td style="padding: 15px; border-bottom: none;">-</td>
+                        <td style="padding: 15px; border-bottom: none;">11-Jun-25</td>
+                        <td style="padding: 15px; border-bottom: none; color: #cbd5e1; font-style: italic;">ครบสัญญา</td>
+                        <td style="padding: 15px; border-bottom: none; text-align: center;">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <p style="margin-top: 20px; font-size: 16px; color: #94a3b8;">
+            <i class="fa-solid fa-file-excel" style="color: #22c55e;"></i> Data Reference: BC & P MA Planing 2024-2025 (Sample Extract)
+        </p>
+    </div>
+</div>
+
 # --- 7. ระบบ Filter ---
 st.markdown("---")
 st.subheader("🔍 ตัวกรองข้อมูล (Filters)")
