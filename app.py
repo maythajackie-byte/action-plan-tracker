@@ -110,12 +110,6 @@ if not df.empty:
         fig_p.update_layout(font=dict(color="white"), legend_font_color="white", paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_p, use_container_width=True)
 
-<div class="slide-container" id="slide_ma_tracking">
-    <h2 class="slide-title">08: MA & MT Tracking Plan (2024-2025)</h2>
-    <div class="content-area">
-        <p style="margin-bottom: 25px; font-size: 22px;">
-            ระบบบริหารจัดการและติดตามแผนการบำรุงรักษาระบบ (Maintenance Agreement) ของลูกค้าอย่างต่อเนื่อง
-        </p>
         
 # --- เริ่มโค้ดสำหรับวางใน Streamlit ---
 st.markdown("""
