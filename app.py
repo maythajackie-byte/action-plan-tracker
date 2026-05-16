@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-from datetime import datetime, date, time, timedelta
-import calendar
+from datetime import datetime, date, time
+from streamlit_calendar import calendar
+import io
 
-# ตั้งค่าการแสดงผลแนวกว้าง (Enterprise Layout)
-st.set_page_config(page_title="Engineering Master Scheduler 5.2", layout="wide")
+# ตั้งค่าการแสดงผลแนวกว้าง
+st.set_page_config(page_title="Engineering Master Scheduler 6.0", layout="wide")
 
-st.title("📊 Engineering Master Scheduler Dashboard 5.2")
-st.markdown("### ระบบบริหารแผนงานประจำปี พ.ศ. 2569")
+st.title("📊 Engineering Master Scheduler Dashboard 6.0")
+st.markdown("### ระบบบริหารแผนงานประจำปี และ Interactive Calendar")
 
 # --- [ข้อมูลโครงสร้างหลัก - Master Data] ---
 TEAMS = [
@@ -70,7 +70,7 @@ if "employee_roster" not in st.session_state:
 if "task_schedule" not in st.session_state:
     init_tasks = [
         {"ชื่อพนักงาน": "วิชาญ (Chan)", "ทีม": "Cinema Engineer", "กะ": "Day", "ประเภท": "แผนงาน", "Status": "P2", "หมวดหมู่": "Project (Bangkok)", "รายละเอียด": "ติดตั้งระบบภาพ SFW Hall 15", "เริ่ม": "2026-05-18 09:00", "สิ้นสุด": "2026-05-20 18:00"},
-        {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Broadcast Engineer", "กะ": "Day", "ประเภท": "การลา", "Status": "VL", "หมวดหมู่": "ลาพักร้อน", "รายละเอียด": "พักร้อนประจำปี", "เริ่ม": "2026-05-17 09:00", "สิ้นสุด": "2026-05-17 18:00"},
+        {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Broadcast Engineer", "กะ": "Day", "ประเภท": "การลา", "Status": "VL", "หมวดหมู่": "ลาพักร้อน", "รายละเอียด": "พักร้อนประจำปี", "เริ่ม": "2026-05-13 09:00", "สิ้นสุด": "2026-05-15 18:00"},
         {"ชื่อพนักงาน": "กัลยกร (Namfon)", "ทีม": "Production Team", "กะ": "Mid", "ประเภท": "แผนงาน", "Status": "P0", "หมวดหมู่": "Production (Project)", "รายละเอียด": "Brainstorm Stage โครงการใหม่", "เริ่ม": "2026-05-18 15:00", "สิ้นสุด": "2026-05-18 23:00"}
     ]
     df_tasks = pd.DataFrame(init_tasks)
@@ -82,8 +82,7 @@ if "task_schedule" not in st.session_state:
 # =========================================================
 # 👤 ขั้นตอนที่ 1: ลงทะเบียนรายชื่อพนักงานใหม่
 # =========================================================
-st.subheader("👤 ขั้นตอนที่ 1: ลงทะเบียนรายชื่อพนักงานใหม่")
-with st.expander("📝 เปิดฟอร์มลงทะเบียนพนักงานใหม่ (ข้อมูลจะไปเพิ่มที่แถบซ้ายมืออัตโนมัติ)", expanded=False):
+with st.expander("👤 ลงทะเบียนรายชื่อพนักงานใหม่", expanded=False):
     with st.form("main_add_employee_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
         with c1:
@@ -97,36 +96,30 @@ with st.expander("📝 เปิดฟอร์มลงทะเบียนพ
                 st.session_state.employee_roster = pd.concat([st.session_state.employee_roster, pd.DataFrame([new_emp])], ignore_index=True)
                 st.success(f"บันทึกรายชื่อคุณ {add_name} สำเร็จ!")
                 st.rerun()
-            else:
-                st.error("กรุณากรอกชื่อพนักงานก่อนกดบันทึก")
-
-st.divider()
-
 
 # =========================================================
 # 👥 แถบเครื่องมือแสดงรายชื่อพนักงานด้านซ้ายมือ (Sidebar)
 # =========================================================
-st.sidebar.header("👥 รายชื่อพนักงานในระบบ")
+st.sidebar.header("👥 รายชื่อพนักงาน")
 roster_df = st.session_state.employee_roster
 roster_df["Display_Label"] = roster_df["ชื่อพนักงาน"] + " : " + roster_df["ทีม"]
 
 selected_label = st.sidebar.radio(
-    "👉 คลิกเลือกชื่อพนักงานเพื่อวางงาน:",
+    "👉 คลิกเลือกชื่อพนักงานเพื่อจัดการงาน:",
     options=roster_df["Display_Label"].unique()
 )
 
 current_emp_name = roster_df[roster_df["Display_Label"] == selected_label]["ชื่อพนักงาน"].values[0]
 current_emp_team = roster_df[roster_df["Display_Label"] == selected_label]["ทีม"].values[0]
 
-
 # =========================================================
-# 🛠️ ขั้นตอนที่ 2: จัดการตารางงานและการลา (แยกประเภทเด็ดขาด)
+# 🛠️ ขั้นตอนที่ 2: จัดการตารางงานและการลา
 # =========================================================
-st.subheader(f"🛠️ ขั้นตอนที่ 2: จัดการตารางเวลาของ [ {current_emp_name} ]")
+st.subheader(f"🛠️ จัดการตารางเวลาของ [ {current_emp_name} ]")
 
 entry_type = st.radio(
     "เลือกระบบที่ต้องการบันทึกข้อมูล:", 
-    ["💼 วางแผนงาน (Work Plan)", "🏖️ บันทึกการลา (Leave)"], 
+    ["💼 วางแผนงาน (Work Plan)", "🏖️ แจ้งลา (Leave)"], 
     horizontal=True
 )
 
@@ -135,7 +128,6 @@ with st.form("assignment_form", clear_on_submit=True):
     
     with col_f1:
         shift_choice = st.selectbox("กะเวลาการทำงาน:", ["Day", "Mid", "Night"])
-        
         if "วางแผนงาน" in entry_type:
             task_detail = st.text_area("รายละเอียดเนื้อหางาน:")
             record_cat = "แผนงาน"
@@ -147,20 +139,17 @@ with st.form("assignment_form", clear_on_submit=True):
             status_code = st.selectbox("เลือกระดับ Stage งาน:", PROJECT_STAGES).split(":")[0]
             work_cat = st.selectbox("หมวดหมู่งานตามพื้นที่ปฏิบัติงาน:", TASK_CATEGORIES)
         else:
-            status_code = st.selectbox("แจ้งลา", LEAVE_OPTIONS).split(":")[0]
+            status_code = st.selectbox("แจ้งลา:", LEAVE_OPTIONS).split(":")[0]
             task_detail = st.text_area("เหตุผลการลา:")
             work_cat = "การลาหยุดพักผ่อน"
         
     with col_f3:
         start_d = st.date_input("วันที่เริ่มต้น:", date(2026, 5, 18))
-        # ปรับค่า Default เป็น 09:00 และสเกลช่วงเวลาทีละ 30 นาที (1800 วินาที)
         start_t = st.time_input("เวลาเริ่มต้น:", time(9, 0), step=1800)
-        
         end_d = st.date_input("วันที่สิ้นสุด:", date(2026, 5, 18))
-        # ปรับค่า Default เป็น 18:00 และสเกลช่วงเวลาทีละ 30 นาที (1800 วินาที)
         end_t = st.time_input("เวลาสิ้นสุด:", time(18, 0), step=1800)
         
-    if st.form_submit_button("💾 บันทึกข้อมูลลงฐานข้อมูลส่วนกลาง"):
+    if st.form_submit_button("💾 บันทึกลงปฏิทิน"):
         if task_detail.strip() == "":
             st.error("❌ กรุณากรอกรายละเอียดงานหรือเหตุผลก่อนส่งข้อมูล")
         else:
@@ -181,85 +170,112 @@ with st.form("assignment_form", clear_on_submit=True):
 
 st.divider()
 
+# =========================================================
+# ฟังก์ชันแปลงข้อมูล Pandas เป็น Event Format สำหรับปฏิทิน
+# =========================================================
+def df_to_calendar_events(df):
+    events = []
+    for _, row in df.iterrows():
+        # แสดงชื่อ Status และชื่อคนบนป้ายปฏิทิน
+        title = f"{row['Status']} - {row['ชื่อพนักงาน']}"
+        bg_color = STAGE_COLORS.get(row['Status'], "#333333")
+        
+        events.append({
+            "title": title,
+            "start": row["เริ่ม"].strftime("%Y-%m-%dT%H:%M:%S"),
+            "end": row["สิ้นสุด"].strftime("%Y-%m-%dT%H:%M:%S"),
+            "backgroundColor": bg_color,
+            "borderColor": bg_color,
+            # ข้อมูลเหล่านี้จะแสดงเมื่อคลิก (Pop-up)
+            "extendedProps": {
+                "description": f"รายละเอียด: {row['รายละเอียด']} | กะ: {row['กะ']}"
+            }
+        })
+    return events
 
-# =========================================================
-# 🗓️ ขั้นตอนที่ 3: ส่วนแสดงผลปฏิทินรายเดือน (Sunday First Grid Layout)
-# =========================================================
-st.subheader("🗓️ ขั้นตอนที่ 3: ปฏิทินภาพรวมประจำเดือน (Monthly Calendar Grid - เริ่มวันอาทิตย์)")
+# กำหนดตัวเลือกของปฏิทิน (ตั้งค่า UI ปฏิทิน)
+calendar_options = {
+    "initialView": "dayGridMonth",
+    "initialDate": "2026-05-01",  # ซูมไปที่พฤษภาคม 2026 อัตโนมัติ
+    "firstDay": 0,                # 0 = เริ่มวันอาทิตย์ (Sunday First)
+    "headerToolbar": {
+        "left": "today prev,next",
+        "center": "title",
+        "right": "dayGridMonth,timeGridWeek"
+    },
+    "eventClick": "function(info) { alert('📅 ผู้รับผิดชอบ: ' + info.event.title + '\\n\\n' + info.event.extendedProps.description); }",
+    "slotMinTime": "06:00:00",
+    "slotMaxTime": "24:00:00"
+}
 
 current_data = st.session_state.task_schedule
 
+# =========================================================
+# 🗓️ ส่วนแสดงผลปฏิทินภาพรวม (All Staff)
+# =========================================================
+st.subheader("🗓️ ปฏิทินภาพรวมของพนักงานทั้งหมด (All Staff Calendar)")
+
 if not current_data.empty:
-    current_data['วันที่'] = current_data['เริ่ม'].dt.date
+    all_events = df_to_calendar_events(current_data)
+    calendar(events=all_events, options=calendar_options, key="main_calendar")
     
-    # กำหนดปีและเดือนที่ต้องการแสดงผล (ตัวอย่าง: พฤษภาคม 2026)
-    target_year = 2026
-    target_month = 5
-    
-    st.markdown(f"#### 📅 เดือนพฤษภาคม พ.ศ. 2569")
-    
-    # สร้างโครงสร้างปฏิทินโดยกำหนดให้วันแรกของสัปดาห์คือวันอาทิตย์ (firstweekday=6)
-    cal = calendar.Calendar(firstweekday=6)
-    month_weeks = cal.monthdayscalendar(target_year, target_month)
-    
-    # สร้างหัวคอลัมน์วันอาทิตย์ - วันเสาร์
-    days_headers = ["อาทิตย์ (Sun)", "จันทร์ (Mon)", "อังคาร (Tue)", "พุธ (Wed)", "พฤหัสบดี (Thu)", "ศุกร์ (Fri)", "เสาร์ (Sat)"]
-    cols = st.columns(7)
-    for idx, header in enumerate(days_headers):
-        cols[idx].markdown(f"<div style='text-align:center; font-weight:bold; background-color:#1e293b; padding:10px; border-radius:5px;'>{header}</div>", unsafe_allow_html=True)
-        
-    # วาดกล่องวันที่แต่ละสัปดาห์ลงในตาราง Grid
-    for week in month_weeks:
-        week_cols = st.columns(7)
-        for day_idx, day_num in enumerate(week):
-            if day_num == 0:
-                # วันของเดือนอื่นที่คาบเกี่ยวกัน ปล่อยให้เป็นกล่องว่าง
-                week_cols[day_idx].markdown("<div style='min-height:120px; background-color:#0e1117; border:1px solid #1e293b; padding:5px;'></div>", unsafe_allow_html=True)
-            else:
-                current_date_obj = date(target_year, target_month, day_num)
-                day_events = current_data[current_data['วันที่'] == current_date_obj]
-                
-                # ตกแต่งกล่องข้อความวันที่ภายในปฏิทิน
-                event_html = ""
-                for _, ev in day_events.iterrows():
-                    bg_color = STAGE_COLORS.get(ev['Status'], '#333')
-                    event_html += f"<div style='background-color:{bg_color}; color:black; font-size:11px; padding:2px 5px; margin-top:3px; border-radius:3px; font-weight:bold;'>{ev['ชื่อพนักงาน']}: {ev['Status']}</div>"
-                
-                week_cols[day_idx].markdown(
-                    f"<div style='min-height:120px; background-color:#1e222b; border:1px solid #38bdf8; padding:5px; border-radius:5px;'>"
-                    f"<span style='font-weight:bold; font-size:16px; color:#38bdf8;'>{day_num}</span>"
-                    f"{event_html}"
-                    f"</div>", 
-                    unsafe_allow_html=True
-                )
-                
-    # =========================================================
-    # 🔍 แผนภูมิ Gantt Chart เจาะลึกรายบุคคล (แสดงด้านล่างปฏิทิน)
-    # =========================================================
     st.markdown("---")
-    st.markdown(f"#### 🔍 แผนภูมิ Gantt Chart สรุปตารางงานรายกะเฉพาะบุคคลของ: **{current_emp_name}**")
+    
+    # =========================================================
+    # 🔍 ปฏิทินเฉพาะบุคคล (Personal Calendar) 
+    # =========================================================
+    st.subheader(f"👤 ปฏิทินตารางเวลาเฉพาะบุคคลของ: **{current_emp_name}**")
     personal_data = current_data[current_data["ชื่อพนักงาน"] == current_emp_name]
     
     if not personal_data.empty:
-        fig_gantt = px.timeline(
-            personal_data, x_start="เริ่ม", x_end="สิ้นสุด", y="กะ", color="Status",
-            color_discrete_map=STAGE_COLORS, hover_data=["หมวดหมู่", "รายละเอียด"],
-            title=f"แถบเวลาปฏิบัติงานประจำวันแยกกะ (Day / Mid / Night) ของ {current_emp_name}"
-        )
-        fig_gantt.update_yaxes(autorange="reversed")
-        fig_gantt.update_layout(height=230, margin=dict(l=10, r=10, t=30, b=10))
-        st.plotly_chart(fig_gantt, use_container_width=True)
+        personal_events = df_to_calendar_events(personal_data)
+        # ใช้ timeGridWeek เพื่อดูตารางสอน/ตารางงานของคนคนนั้นแบบละเอียดเป็นรายชั่วโมงได้
+        personal_cal_options = calendar_options.copy()
+        personal_cal_options["initialView"] = "timeGridWeek" 
+        
+        calendar(events=personal_events, options=personal_cal_options, key="personal_calendar")
     else:
-        st.info(f"💡 คุณ {current_emp_name} ยังไม่มีประวัติการลงตารางงานหรือการลาในเดือนนี้")
+        st.info(f"💡 คุณ {current_emp_name} ยังไม่มีข้อมูลในระบบ")
 
-    # 3.3 ตารางแก้ไขข้อมูล
-    with st.expander("🛠️ ตารางจัดการแก้ไขหรือลบรายการแผนงานดิบในระบบ"):
-        edited_df = st.data_editor(current_data[["ชื่อพนักงาน", "ทีม", "กะ", "ประเภท", "Status", "หมวดหมู่", "เริ่ม", "สิ้นสุด", "รายละเอียด"]], use_container_width=True, num_rows="dynamic")
-        if st.button("💾 ยืนยันปรับปรุงข้อมูลปฏิทิน"):
+    # =========================================================
+    # 💾 ระบบ Export ข้อมูล และ แก้ไขข้อมูล
+    # =========================================================
+    st.markdown("---")
+    st.subheader("🛠️ จัดการข้อมูลดิบ & นำออกไฟล์ (Export)")
+    
+    col_dl1, col_dl2 = st.columns(2)
+    with col_dl1:
+        # ฟังก์ชัน Export Excel
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            current_data.to_excel(writer, index=False, sheet_name='Master_Schedule')
+        
+        st.download_button(
+            label="📥 ดาวน์โหลดข้อมูลเป็น Excel (.xlsx)",
+            data=buffer,
+            file_name="Engineering_Schedule_2026.xlsx",
+            mime="application/vnd.ms-excel",
+            type="primary",
+            use_container_width=True
+        )
+    with col_dl2:
+        # ฟังก์ชัน Export CSV
+        csv = current_data.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 ดาวน์โหลดข้อมูลเป็น CSV",
+            data=csv,
+            file_name="Engineering_Schedule_2026.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    with st.expander("แก้ไขหรือลบรายการแผนงานในฐานข้อมูล (Editable Table)"):
+        edited_df = st.data_editor(current_data, use_container_width=True, num_rows="dynamic")
+        if st.button("💾 ยืนยันการแก้ไขข้อมูล"):
             edited_df["เริ่ม"] = pd.to_datetime(edited_df["เริ่ม"])
             edited_df["สิ้นสุด"] = pd.to_datetime(edited_df["สิ้นสุด"])
             st.session_state.task_schedule = edited_df
-            st.success("อัปเดตระบบปฏิทินภาพรวมเรียบร้อย!")
+            st.success("อัปเดตระบบปฏิทินเรียบร้อย!")
             st.rerun()
 else:
     st.info("ระบบกำลังรอข้อมูลเริ่มต้น...")
