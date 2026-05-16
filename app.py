@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
+import calendar
 
 # ตั้งค่าการแสดงผลแนวกว้าง (Enterprise Layout)
-st.set_page_config(page_title="Engineering Master Scheduler 5.1", layout="wide")
+st.set_page_config(page_title="Engineering Master Scheduler 5.2", layout="wide")
 
-st.title("📊 Engineering Master Scheduler Dashboard 5.1")
+st.title("📊 Engineering Master Scheduler Dashboard 5.2")
 st.markdown("### ระบบบริหารแผนงานประจำปี พ.ศ. 2569")
 
 # --- [ข้อมูลโครงสร้างหลัก - Master Data] ---
@@ -25,7 +25,7 @@ TASK_CATEGORIES = [
     "Event/Show", "Others"
 ]
 
-PROJECT_STAGES = ["P0:", "P1:", "P2:", "P3:"]
+PROJECT_STAGES = ["P0: Pitch/Brainstorm", "P1: Build up/Present", "P2: Installation", "P3: After Sales/Service/MA"]
 LEAVE_OPTIONS = ["PL: ลากิจ (Personal Leave)", "VL: ลาพักร้อน (Vacation Leave)", "SL: ลาป่วย (Sick Leave)", "LVP: ลาไม่รับค่าจ้าง (Leave Without Pay)"]
 
 STAGE_COLORS = {
@@ -69,8 +69,8 @@ if "employee_roster" not in st.session_state:
 
 if "task_schedule" not in st.session_state:
     init_tasks = [
-        {"ชื่อพนักงาน": "วิชาญ (Chan)", "ทีม": "Cinema Engineer", "กะ": "Day", "ประเภท": "แผนงาน", "Status": "P2", "หมวดหมู่": "Project (Bangkok)", "รายละเอียด": "ติดตั้งระบบภาพ SFW Hall 15", "เริ่ม": "2026-05-18 08:00", "สิ้นสุด": "2026-05-20 17:00"},
-        {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Broadcast Engineer", "กะ": "Day", "ประเภท": "การลา", "Status": "VL", "หมวดหมู่": "ลาพักร้อน", "รายละเอียด": "พักร้อนประจำปี", "เริ่ม": "2026-05-19 08:00", "สิ้นสุด": "2026-05-21 17:00"},
+        {"ชื่อพนักงาน": "วิชาญ (Chan)", "ทีม": "Cinema Engineer", "กะ": "Day", "ประเภท": "แผนงาน", "Status": "P2", "หมวดหมู่": "Project (Bangkok)", "รายละเอียด": "ติดตั้งระบบภาพ SFW Hall 15", "เริ่ม": "2026-05-18 09:00", "สิ้นสุด": "2026-05-20 18:00"},
+        {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Broadcast Engineer", "กะ": "Day", "ประเภท": "การลา", "Status": "VL", "หมวดหมู่": "ลาพักร้อน", "รายละเอียด": "พักร้อนประจำปี", "เริ่ม": "2026-05-17 09:00", "สิ้นสุด": "2026-05-17 18:00"},
         {"ชื่อพนักงาน": "กัลยกร (Namfon)", "ทีม": "Production Team", "กะ": "Mid", "ประเภท": "แผนงาน", "Status": "P0", "หมวดหมู่": "Production (Project)", "รายละเอียด": "Brainstorm Stage โครงการใหม่", "เริ่ม": "2026-05-18 15:00", "สิ้นสุด": "2026-05-18 23:00"}
     ]
     df_tasks = pd.DataFrame(init_tasks)
@@ -120,7 +120,7 @@ current_emp_team = roster_df[roster_df["Display_Label"] == selected_label]["ท�
 
 
 # =========================================================
-# 🛠️ ขั้นตอนที่ 2: จัดการตารางงานและการลา (ปรับปรุงฟอร์มใหม่ตามเงื่อนไข)
+# 🛠️ ขั้นตอนที่ 2: จัดการตารางงานและการลา (แยกประเภทเด็ดขาด)
 # =========================================================
 st.subheader(f"🛠️ ขั้นตอนที่ 2: จัดการตารางเวลาของ [ {current_emp_name} ]")
 
@@ -136,7 +136,6 @@ with st.form("assignment_form", clear_on_submit=True):
     with col_f1:
         shift_choice = st.selectbox("กะเวลาการทำงาน:", ["Day", "Mid", "Night"])
         
-        # ปรับการแสดงผลกล่องข้อความในช่องแรกตามเงื่อนไขประเภทงาน
         if "วางแผนงาน" in entry_type:
             task_detail = st.text_area("รายละเอียดเนื้อหางาน:")
             record_cat = "แผนงาน"
@@ -148,16 +147,18 @@ with st.form("assignment_form", clear_on_submit=True):
             status_code = st.selectbox("เลือกระดับ Stage งาน:", PROJECT_STAGES).split(":")[0]
             work_cat = st.selectbox("หมวดหมู่งานตามพื้นที่ปฏิบัติงาน:", TASK_CATEGORIES)
         else:
-            # ปรับเปลี่ยนหัวข้อและเพิ่มกล่องเหตุผลการลาในช่องกลางทั้งหมด
             status_code = st.selectbox("แจ้งลา", LEAVE_OPTIONS).split(":")[0]
             task_detail = st.text_area("เหตุผลการลา:")
             work_cat = "การลาหยุดพักผ่อน"
         
     with col_f3:
         start_d = st.date_input("วันที่เริ่มต้น:", date(2026, 5, 18))
-        start_t = st.time_input("เวลาเริ่มต้น:", time(8, 0))
+        # ปรับค่า Default เป็น 09:00 และสเกลช่วงเวลาทีละ 30 นาที (1800 วินาที)
+        start_t = st.time_input("เวลาเริ่มต้น:", time(9, 0), step=1800)
+        
         end_d = st.date_input("วันที่สิ้นสุด:", date(2026, 5, 18))
-        end_t = st.time_input("เวลาสิ้นสุด:", time(17, 0))
+        # ปรับค่า Default เป็น 18:00 และสเกลช่วงเวลาทีละ 30 นาที (1800 วินาที)
+        end_t = st.time_input("เวลาสิ้นสุด:", time(18, 0), step=1800)
         
     if st.form_submit_button("💾 บันทึกข้อมูลลงฐานข้อมูลส่วนกลาง"):
         if task_detail.strip() == "":
@@ -182,33 +183,60 @@ st.divider()
 
 
 # =========================================================
-# 🗓️ ขั้นตอนที่ 3: ส่วนแสดงผลปฏิทินรายเดือน และ Gantt Chart รายคน
+# 🗓️ ขั้นตอนที่ 3: ส่วนแสดงผลปฏิทินรายเดือน (Sunday First Grid Layout)
 # =========================================================
-st.subheader("🗓️ ขั้นตอนที่ 3: ปฏิทินภาพรวมและแผนภูมิสรุปรายบุคคล")
+st.subheader("🗓️ ขั้นตอนที่ 3: ปฏิทินภาพรวมประจำเดือน (Monthly Calendar Grid - เริ่มวันอาทิตย์)")
 
 current_data = st.session_state.task_schedule
 
 if not current_data.empty:
-    current_data["Label_Side"] = current_data["ชื่อพนักงาน"] + " (" + current_data["ทีม"] + ")"
     current_data['วันที่'] = current_data['เริ่ม'].dt.date
     
-    # 3.1 ปฏิทินภาพรวมทั้งเดือน (Monthly Matrix) ขึ้นก่อนอันดับแรก
-    st.markdown("#### 📅 ตารางสัญญานภาพรวมรายวันประจำเดือน (Monthly Matrix Overview)")
-    cal_pivot = current_data.pivot_table(index='Label_Side', columns='วันที่', values='Status', aggfunc='first')
-    status_mapping = {k: i for i, k in enumerate(STAGE_COLORS.keys())}
-    numeric_cal = cal_pivot.replace(status_mapping)
+    # กำหนดปีและเดือนที่ต้องการแสดงผล (ตัวอย่าง: พฤษภาคม 2026)
+    target_year = 2026
+    target_month = 5
     
-    fig_matrix = go.Figure(data=go.Heatmap(
-        z=numeric_cal.values,
-        x=numeric_cal.columns,
-        y=numeric_cal.index,
-        colorscale=[[i/len(STAGE_COLORS), color] for i, color in enumerate(STAGE_COLORS.values())],
-        showscale=False, xgap=4, ygap=4
-    ))
-    fig_matrix.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10))
-    st.plotly_chart(fig_matrix, use_container_width=True)
+    st.markdown(f"#### 📅 เดือนพฤษภาคม พ.ศ. 2569")
     
-    # 3.2 แผนภูมิ Gantt Chart เจาะลึกรายบุคคล แสดงผลด้านล่างเมื่อคลิกเลือกชื่อ
+    # สร้างโครงสร้างปฏิทินโดยกำหนดให้วันแรกของสัปดาห์คือวันอาทิตย์ (firstweekday=6)
+    cal = calendar.Calendar(firstweekday=6)
+    month_weeks = cal.monthdayscalendar(target_year, target_month)
+    
+    # สร้างหัวคอลัมน์วันอาทิตย์ - วันเสาร์
+    days_headers = ["อาทิตย์ (Sun)", "จันทร์ (Mon)", "อังคาร (Tue)", "พุธ (Wed)", "พฤหัสบดี (Thu)", "ศุกร์ (Fri)", "เสาร์ (Sat)"]
+    cols = st.columns(7)
+    for idx, header in enumerate(days_headers):
+        cols[idx].markdown(f"<div style='text-align:center; font-weight:bold; background-color:#1e293b; padding:10px; border-radius:5px;'>{header}</div>", unsafe_allow_html=True)
+        
+    # วาดกล่องวันที่แต่ละสัปดาห์ลงในตาราง Grid
+    for week in month_weeks:
+        week_cols = st.columns(7)
+        for day_idx, day_num in enumerate(week):
+            if day_num == 0:
+                # วันของเดือนอื่นที่คาบเกี่ยวกัน ปล่อยให้เป็นกล่องว่าง
+                week_cols[day_idx].markdown("<div style='min-height:120px; background-color:#0e1117; border:1px solid #1e293b; padding:5px;'></div>", unsafe_allow_html=True)
+            else:
+                current_date_obj = date(target_year, target_month, day_num)
+                day_events = current_data[current_data['วันที่'] == current_date_obj]
+                
+                # ตกแต่งกล่องข้อความวันที่ภายในปฏิทิน
+                event_html = ""
+                for _, ev in day_events.iterrows():
+                    bg_color = STAGE_COLORS.get(ev['Status'], '#333')
+                    event_html += f"<div style='background-color:{bg_color}; color:black; font-size:11px; padding:2px 5px; margin-top:3px; border-radius:3px; font-weight:bold;'>{ev['ชื่อพนักงาน']}: {ev['Status']}</div>"
+                
+                week_cols[day_idx].markdown(
+                    f"<div style='min-height:120px; background-color:#1e222b; border:1px solid #38bdf8; padding:5px; border-radius:5px;'>"
+                    f"<span style='font-weight:bold; font-size:16px; color:#38bdf8;'>{day_num}</span>"
+                    f"{event_html}"
+                    f"</div>", 
+                    unsafe_allow_html=True
+                )
+                
+    # =========================================================
+    # 🔍 แผนภูมิ Gantt Chart เจาะลึกรายบุคคล (แสดงด้านล่างปฏิทิน)
+    # =========================================================
+    st.markdown("---")
     st.markdown(f"#### 🔍 แผนภูมิ Gantt Chart สรุปตารางงานรายกะเฉพาะบุคคลของ: **{current_emp_name}**")
     personal_data = current_data[current_data["ชื่อพนักงาน"] == current_emp_name]
     
@@ -222,9 +250,9 @@ if not current_data.empty:
         fig_gantt.update_layout(height=230, margin=dict(l=10, r=10, t=30, b=10))
         st.plotly_chart(fig_gantt, use_container_width=True)
     else:
-        st.info(f"💡 คุณ {current_emp_name} ยังไม่มีประวัติการลงตารางงานหรือการลาในสัปดาห์นี้")
+        st.info(f"💡 คุณ {current_emp_name} ยังไม่มีประวัติการลงตารางงานหรือการลาในเดือนนี้")
 
-    # 3.3 ตารางแก้ไขข้อมูลดิบ
+    # 3.3 ตารางแก้ไขข้อมูล
     with st.expander("🛠️ ตารางจัดการแก้ไขหรือลบรายการแผนงานดิบในระบบ"):
         edited_df = st.data_editor(current_data[["ชื่อพนักงาน", "ทีม", "กะ", "ประเภท", "Status", "หมวดหมู่", "เริ่ม", "สิ้นสุด", "รายละเอียด"]], use_container_width=True, num_rows="dynamic")
         if st.button("💾 ยืนยันปรับปรุงข้อมูลปฏิทิน"):
@@ -233,3 +261,5 @@ if not current_data.empty:
             st.session_state.task_schedule = edited_df
             st.success("อัปเดตระบบปฏิทินภาพรวมเรียบร้อย!")
             st.rerun()
+else:
+    st.info("ระบบกำลังรอข้อมูลเริ่มต้น...")
