@@ -198,6 +198,7 @@ calendar_options = {
     "initialView": "dayGridMonth",
     "initialDate": "2026-05-01",  # ซูมไปที่พฤษภาคม 2026 อัตโนมัติ
     "firstDay": 0,                # 0 = เริ่มวันอาทิตย์ (Sunday First)
+    "displayEventTime": False,   # <--- เพิ่มบรรทัดนี้เพื่อซ่อนเวลา 9a / 3p
     "headerToolbar": {
         "left": "today prev,next",
         "center": "title",
