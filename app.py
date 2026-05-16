@@ -77,7 +77,7 @@ with st.expander("👤 ขั้นตอนที่ 1: กรอกข้อ�
         st.subheader("📝 ฟอร์มลงทะเบียนพนักงาน")
         c1, c2 = st.columns(2)
         with c1:
-            new_name = st.text_input("ชื่อ-นามสกุลพนักงาน (พร้อมชื่อเล่น):", placeholder="เช่น สมชาย (Joe)")
+            new_name = st.text_input("ชื่อ-นามสกุลพนักงาน (พร้อมชื่อเล่น):", placeholder="เช่น วิชาญ (Chan)")
         with c2:
             new_team = st.selectbox("เลือกทีมสังกัด:", TEAMS)
         
@@ -121,7 +121,7 @@ if selected_employee:
             else:
                 status_code = st.selectbox("เลือกรหัสการลา:", LEAVE_CODES).split(":")[0]
                 task_cat = "การลา"
-            task_detail = st.text_area("รายละเอียดเนื้อข่าวงา/เหตุผลการลา:")
+            task_detail = st.text_area("รายละเอียด/เหตุผลการลา:")
             
         with col_t3:
             start_date = st.date_input("วันที่เริ่มต้น:", date(2026, 5, 18))
