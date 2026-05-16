@@ -4,27 +4,39 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, date, time
 
-# ตั้งค่าหน้าจอ Web App เป็นแนวกว้างแบบ Enterprise Layout
-st.set_page_config(page_title="Engineering Master Scheduler 3.0", layout="wide")
+# ตั้งค่าการแสดงผลแบบแนวกว้าง
+st.set_page_config(page_title="Engineering Master Scheduler 4.0", layout="wide")
 
-st.title("📊 Engineering Master Scheduler Dashboard 3.0")
-st.markdown("### ระบบบริหารงานรายบุคคลและปฏิทินภาพรวม")
+st.title("📊 Engineering Master Scheduler Dashboard 4.0")
+st.markdown("### ระบบบริหารแผนงานประจำปี พ.ศ. 2569")
 
 # --- 1. ข้อมูลโครงสร้างหลัก (Master Data) ---
 TEAMS = [
     "Production Team", "Cinema Engineer", "Pro-AV Engineer", 
-    "Post Production Engineer", "Broadcast Engineer", "Center Engineer", "Residential Engineer"
+    "Post Production Engineer", "Broadcast Engineer", "Residential Engineer"
 ]
-PROJECT_STAGES = ["P0: Pitch/Brainstorm", "P1: Build up/Present", "P2: Installation", "P3: After Sales/Service/MA"]
-LEAVE_CODES = ["PL: ลากิจ", "VL: ลาพักร้อน", "SL: ลาป่วย", "LVP: ลาไม่รับค่าจ้าง"]
 
+# หมวดหมู่งานหลักแยกพื้นที่ตามข้อกำหนดของคุณ
+TASK_CATEGORIES = [
+    "Maintenance (Bangkok)", "Maintenance (Outside Bangkok)", "Maintenance (Oversea)",
+    "Service (Bangkok)", "Service (Outside Bangkok)", "Service (Oversea)",
+    "Project (Bangkok)", "Project (Outside Bangkok)", "Project (Oversea)",
+    "Training (In-house)", "Training (Outside)",
+    "Production (Project)", "Production (Other)",
+    "Event/Show"
+]
+
+PROJECT_STAGES = ["P0: Pitch/Brainstorm", "P1: Build up/Present", "P2: Installation", "P3: After Sales/Service/MA"]
+LEAVE_OPTIONS = ["PL: ลากิจ (Personal Leave)", "VL: ลาพักร้อน (Vacation Leave)", "SL: ลาป่วย (Sick Leave)", "LVP: ลาไม่รับค่าจ้าง (Leave Without Pay)"]
+
+# โค้ดสีมาตรฐานของระบบสเกดดูล
 STAGE_COLORS = {
     "P0": "#F1C40F", "P1": "#E67E22", "P2": "#3498DB", "P3": "#2ECC71",
     "PL": "#95A5A6", "VL": "#9B59B6", "SL": "#E74C3C", "LVP": "#34495E"
 }
 
-# --- 2. ระบบฐานข้อมูลชั่วคราว (Session State) ---
-# ฐานข้อมูลรายชื่อพนักงาน
+# --- 2. การจัดเตรียมฐานข้อมูลเบื้องต้น (Initial Session State) ---
+# ขั้นตอนที่ 1: ใส่รายชื่อและสังกัดพนักงานลงในโค้ดโดยตรงบางส่วน
 if "employee_roster" not in st.session_state:
     st.session_state.employee_roster = pd.DataFrame([
         {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Pro-AV Engineer"},
@@ -55,7 +67,7 @@ if "employee_roster" not in st.session_state:
         {"ชื่อพนักงาน": "ไพศาล (Mua)", "ทีม": "Center Engineer"},
         
         {"ชื่อพนักงาน": "ณัฐติพงษ์ (Tle)", "ทีม": "Residential Engineer"},
-        {"ชื่อพนักงาน": "วีรภัทร (Arm)", "ทีม": "Residential Engineer"},       
+        {"ชื่อพนักงาน": "วีรภัทร (Arm)", "ทีม": "Residential Engineer"},
     ])
 
 # ใส่แผนงานเริ่มต้นบางส่วนเพื่อให้ปฏิทินแสดงผลแถบสีสวยงาม
