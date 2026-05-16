@@ -210,7 +210,7 @@ calendar_options = {
     "eventClick": "function(info) { alert('📅 ผู้รับผิดชอบ: ' + info.event.title + '\\n\\n' + info.event.extendedProps.description); }",
     "slotMinTime": "06:00:00",
     "slotMaxTime": "24:00:00"
-},
+}
 
 current_data = st.session_state.task_schedule
 
