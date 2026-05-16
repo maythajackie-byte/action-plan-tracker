@@ -202,11 +202,8 @@ calendar_options = {
         "left": "today prev,next",
         "center": "title",
         "right": "dayGridMonth,timeGridWeek"
-        "eventTimeFormat": { "hour": "2-digit", "minute": "2-digit", "hour12": False }, # <--- เพิ่มบรรทัดนี้
-    "headerToolbar": {
-        "left": "today prev, next",
-        "center": "title",
-        "right": "dayGridMonth, timeGridWeek."
+        
+    },
     "eventClick": "function(info) { alert('📅 ผู้รับผิดชอบ: ' + info.event.title + '\\n\\n' + info.event.extendedProps.description); }",
     "slotMinTime": "06:00:00",
     "slotMaxTime": "24:00:00"
