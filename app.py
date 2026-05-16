@@ -70,137 +70,133 @@ if "task_schedule" not in st.session_state:
     df_tasks["สิ้นสุด"] = pd.to_datetime(df_tasks["สิ้นสุด"])
     st.session_state.task_schedule = df_tasks
 
-# --- 3. ส่วนแรก: ฟอร์มกรอกข้อมูลพนักงานใหม่ (หน้าแรก/ส่วนบน) ---
-st.markdown("---")
-with st.expander("👤 ขั้นตอนที่ 1: กรอกข้อมูลลงทะเบียนพนักงาน", expanded=st.session_state.employee_roster.empty):
-    with st.form("employee_form", clear_on_submit=True):
-        st.subheader("📝 ฟอร์มลงทะเบียนพนักงาน")
-        c1, c2 = st.columns(2)
-        with c1:
-            new_name = st.text_input("ชื่อ-นามสกุลพนักงาน (พร้อมชื่อเล่น):", placeholder="เช่น วิชาญ (Chan)")
-        with c2:
-            new_team = st.selectbox("เลือกทีมสังกัด:", TEAMS)
-        
-        if st.form_submit_button("➕ บันทึกรายชื่อพนักงาน"):
-            if new_name.strip() == "":
-                st.error("❌ กรุณากรอกชื่อพนักงานก่อนกดบันทึก")
-            else:
-                new_emp = {"ชื่อพนักงาน": new_name, "ทีม": new_team}
+# --- 3. แถบเครื่องมือและรายชื่อพนักงานด้านซ้ายมือ (Sidebar Layout) ---
+st.sidebar.header("👥 รายชื่อพนักงานและสังกัด")
+
+# ปรับให้ต่อท้ายด้วย : ชื่อทีม เพื่อระบุสังกัดในการเลือก
+roster_df = st.session_state.employee_roster
+roster_df["Display_Label"] = roster_df["ชื่อพนักงาน"] + " : " + roster_df["ทีม"]
+
+selected_label = st.sidebar.radio(
+    "👉 คลิกเลือกชื่อพนักงานเพื่อจัดการงาน:",
+    options=roster_df["Display_Label"].unique()
+)
+
+# ดึงข้อมูลพนักงานและทีมปัจจุบันแยกออกมาใช้งานต่อ
+current_emp_name = roster_df[roster_df["Display_Label"] == selected_label]["ชื่อพนักงาน"].values[0]
+current_emp_team = roster_df[roster_df["Display_Label"] == selected_label]["ทีม"].values[0]
+
+# ฟอร์มเพิ่มพนักงานใหม่เพิ่มเติมภายหลัง
+with st.sidebar.expander("➕ เพิ่มรายชื่อพนักงานใหม่"):
+    with st.form("add_employee_form", clear_on_submit=True):
+        add_name = st.text_input("ชื่อพนักงาน:")
+        add_team = st.selectbox("เลือกทีม:", TEAMS)
+        if st.form_submit_button("บันทึกรายชื่อ"):
+            if add_name.strip() != "":
+                new_emp = {"ชื่อพนักงาน": add_name, "ทีม": add_team}
                 st.session_state.employee_roster = pd.concat([st.session_state.employee_roster, pd.DataFrame([new_emp])], ignore_index=True)
-                st.success(f"✔️ เพิ่มคุณ {new_name} เข้าสู่ระบบเรียบร้อย! รายชื่อจะปรากฏที่แถบด้านซ้าย")
+                st.success("เพิ่มรายชื่อสำเร็จ!")
                 st.rerun()
 
-# --- 4. แถบด้านซ้าย (Sidebar) แสดงรายชื่อพนักงานและตัวกรอง ---
-st.sidebar.header("👥 รายชื่อพนักงานในระบบ")
-if not st.session_state.employee_roster.empty:
-    # ผู้ใช้คลิกเลือกชื่อจากตรงนี้เพื่อไปจัดงาน
-    selected_employee = st.sidebar.radio(
-        "👉 คลิกเลือกชื่อพนักงานเพื่อวางงาน:",
-        options=st.session_state.employee_roster["ชื่อพนักงาน"].unique()
-    )
-    # ดึงชื่อทีมของพนักงานที่เลือกมาโดยอัตโนมัติ
-    selected_team = st.session_state.employee_roster[st.session_state.employee_roster["ชื่อพนักงาน"] == selected_employee]["ทีม"].values[0]
-    st.sidebar.info(f"พนักงานที่เลือก: {selected_employee}\nสังกัด: {selected_team}")
-else:
-    st.sidebar.warning("ยังไม่มีพนักงานในระบบ")
-    selected_employee = None
-
-# --- 5. ส่วนที่สอง: ฟอร์มวางงานตามแผนงาน (อิงจากการคลิกเลือกชื่อพนักงานซ้ายมือ) ---
-if selected_employee:
-    st.subheader(f"📅 ขั้นตอนที่ 2: วางแผนงานและการลาสำหรับ [ {selected_employee} ]")
-    with st.form("task_assignment_form", clear_on_submit=True):
-        col_t1, col_t2, col_t3 = st.columns(3)
-        with col_t1:
-            shift = st.selectbox("กะเวลาการทำงาน:", ["Day", "Mid", "Night"])
-            entry_type = st.radio("ประเภทแผนงาน:", ["งาน (Project Work)", "การลา (Leave)"], horizontal=True)
+# --- 4. ขั้นตอนที่ 2: ฟอร์มจัดการตารางงานและการลา (แยกประเภทชัดเจน) ---
+st.subheader(f"🛠️ จัดการแผนงานและการลาของ [ {current_emp_name} ]")
+with st.form("assignment_form", clear_on_submit=True):
+    col_f1, col_f2, col_f3 = st.columns(3)
+    
+    with col_f1:
+        shift_choice = st.selectbox("กะเวลาการทำงาน:", ["Day", "Mid", "Night"])
+        entry_type = st.radio("เลือกประเภทการบันทึก:", ["วางแผนงาน (Work Plan)", "บันทึกการลา (Leave)"], horizontal=True)
         
-        with col_t2:
-            if "งาน" in entry_type:
-                status_code = st.selectbox("เลือก Stage งาน:", PROJECT_STAGES).split(":")[0]
-                task_cat = "งาน"
-            else:
-                status_code = st.selectbox("เลือกรหัสการลา:", LEAVE_CODES).split(":")[0]
-                task_cat = "การลา"
-            task_detail = st.text_area("รายละเอียด/เหตุผลการลา:")
+    with col_f2:
+        # เงื่อนไขเปลี่ยนตัวเลือกตามประเภทที่คลิกเลือก
+        if "วางแผนงาน" in entry_type:
+            status_code = st.selectbox("เลือกระดับ Stage งาน:", PROJECT_STAGES).split(":")[0]
+            work_cat = st.selectbox("หมวดหมู่งานตามพื้นที่:", TASK_CATEGORIES)
+            record_cat = "แผนงาน"
+        else:
+            status_code = st.selectbox("เลือกประเภทโค้ดการลา:", LEAVE_OPTIONS).split(":")[0]
+            work_cat = "การลาหยุดพักผ่อน"
+            record_cat = "การลา"
             
-        with col_t3:
-            start_date = st.date_input("วันที่เริ่มต้น:", date(2026, 5, 18))
-            start_time = st.time_input("เวลาเริ่มต้น:", time(8, 0))
-            end_date = st.date_input("วันที่สิ้นสุด:", date(2026, 5, 18))
-            end_time = st.time_input("เวลาสิ้นสุด:", time(17, 0))
-            
-        if st.form_submit_button("💾 บันทึกแผนงานลงปฏิทินภาพรวม"):
-            if task_detail.strip() == "":
-                st.error("❌ กรุณากรอกรายละเอียดงานหรือเหตุผลการลา")
-            else:
-                new_task = {
-                    "ชื่อพนักงาน": selected_employee,
-                    "ทีม": selected_team,
-                    "กะ": shift,
-                    "ประเภท": task_cat,
-                    "Status": status_code,
-                    "รายละเอียด": task_detail,
-                    "เริ่ม": datetime.combine(start_date, start_time),
-                    "สิ้นสุด": datetime.combine(end_date, end_time)
-                }
-                st.session_state.task_schedule = pd.concat([st.session_state.task_schedule, pd.DataFrame([new_task])], ignore_index=True)
-                st.success(f"✔️ บันทึกตารางงานของ {selected_employee} เรียบร้อยแล้ว!")
-                st.rerun()
+        task_detail = st.text_area("รายละเอียดเนื้อหางานหรือเหตุผลการลา:")
+        
+    with col_f3:
+        start_d = st.date_input("วันที่เริ่มต้น:", date(2026, 5, 18))
+        start_t = st.time_input("เวลาเริ่มต้น:", time(8, 0))
+        end_d = st.date_input("วันที่สิ้นสุด:", date(2026, 5, 18))
+        end_t = st.time_input("เวลาสิ้นสุด:", time(17, 0))
+        
+    if st.form_submit_button("💾 บันทึกตารางงานเข้าปฏิทินกลาง"):
+        if task_detail.strip() == "":
+            st.error("❌ กรุณากรอกรายละเอียดเนื้อหางานหรือเหตุผล")
+        else:
+            new_record = {
+                "ชื่อพนักงาน": current_emp_name,
+                "ทีม": current_emp_team,
+                "กะ": shift_choice,
+                "ประเภท": record_cat,
+                "Status": status_code,
+                "หมวดหมู่": work_cat,
+                "รายละเอียด": task_detail,
+                "เริ่ม": datetime.combine(start_d, start_t),
+                "สิ้นสุด": datetime.combine(end_d, end_t)
+            }
+            st.session_state.task_schedule = pd.concat([st.session_state.task_schedule, pd.DataFrame([new_record])], ignore_index=True)
+            st.success("บันทึกข้อมูลเรียบร้อย!")
+            st.rerun()
 
 st.divider()
 
-# --- 6. ส่วนล่าง: ปฏิทินและ Gantt Chart ภาพรวมทั้งเดือน อัปเดตอัตโนมัติ ---
-st.subheader("🗓️ ขั้นตอนที่ 3: ปฏิทินและตารางวิเคราะห์ภาพรวมรายเดือน (Holistic Overview)")
+# --- 5. ขั้นตอนที่ 3: ส่วนแสดงผลปฏิทินรวมรายเดือน (ขึ้นแสดงก่อนอันดับแรกสุด) ---
+st.subheader("🗓️ ปฏิทินภาพรวมแผนงานและการลาประจำเดือน (Monthly Matrix)")
 
-current_schedule = st.session_state.task_schedule
+current_data = st.session_state.task_schedule
 
-if not current_schedule.empty:
-    # ปรับแต่งคอลัมน์ชื่อแกน Y ให้เห็นชื่อพนักงานและทีมคู่กันชิดซ้าย
-    current_schedule["Y_Label"] = current_schedule["ชื่อพนักงาน"] + " (" + current_schedule["ทีม"] + ")"
+if not current_data.empty:
+    current_data["Label_Side"] = current_data["ชื่อพนักงาน"] + " (" + current_data["ทีม"] + ")"
+    current_data['วันที่'] = current_data['เริ่ม'].dt.date
     
-    # 6.1 แผนภาพ Gantt Chart แสดงกะเวลา
-    fig_gantt = px.timeline(
-        current_schedule, x_start="เริ่ม", x_end="สิ้นสุด", y="Y_Label", color="Status",
-        color_discrete_map=STAGE_COLORS, hover_data=["รายละเอียด", "กะ"],
-        title="แถบระยะเวลาทำงานและการลาแบ่งตามกะ (Day / Mid / Night)"
-    )
-    fig_gantt.update_yaxes(autorange="reversed", title="")
-    fig_gantt.update_layout(height=350, margin=dict(l=10, r=10, t=30, b=10))
-    st.plotly_chart(fig_gantt, use_container_width=True)
+    # วาดปฏิทิน Matrix รวมก่อนเป็นอันดับแรกตามที่คุณแจ้ง
+    cal_pivot = current_data.pivot_table(index='Label_Side', columns='วันที่', values='Status', aggfunc='first')
+    status_mapping = {k: i for i, k in enumerate(STAGE_COLORS.keys())}
+    numeric_cal = cal_pivot.replace(status_mapping)
     
-    # 6.2 ปฏิทินภาพรวมรายวันในเดือนนั้นๆ (Monthly Calendar Heatmap Style)
-    st.markdown("#### 📅 ตารางสัญญานภาพรวมรายวันประจำเดือน (Monthly Availability Matrix)")
-    current_schedule['วันที่'] = current_schedule['เริ่ม'].dt.date
-    
-    # สร้างตาราง Pivot สรุปภาพรวม
-    cal_pivot = current_schedule.pivot_table(index='Y_Label', columns='วันที่', values='Status', aggfunc='first')
-    
-    # แปลงรหัสตัวอักษรเป็นตัวเลขเพื่อวาด Heatmap
-    status_to_num = {k: i for i, k in enumerate(STAGE_COLORS.keys())}
-    numeric_pivot = cal_pivot.replace(status_to_num)
-    
-    fig_cal = go.Figure(data=go.Heatmap(
-        z=numeric_pivot.values,
-        x=numeric_pivot.columns,
-        y=numeric_pivot.index,
-        colorscale=[[i/len(STAGE_COLORS), col] for i, col in enumerate(STAGE_COLORS.values())],
-        showscale=False, xgap=3, ygap=3
+    fig_matrix = go.Figure(data=go.Heatmap(
+        z=numeric_cal.values,
+        x=numeric_cal.columns,
+        y=numeric_cal.index,
+        colorscale=[[i/len(STAGE_COLORS), color] for i, color in enumerate(STAGE_COLORS.values())],
+        showscale=False, xgap=4, ygap=4
     ))
-    fig_cal.update_layout(height=250, margin=dict(l=10, r=10, t=10, b=10))
-    st.plotly_chart(fig_cal, use_container_width=True)
-
-    # 6.3 ตารางแก้ไข/ลบ ข้อมูลดิบด้านล่างสุด
-    st.markdown("#### 🛠️ เครื่องมือแก้ไขหรือลบแผนงานในฐานข้อมูล")
-    edited_df = st.data_editor(
-        current_schedule[["ชื่อพนักงาน", "ทีม", "กะ", "ประเภท", "Status", "เริ่ม", "สิ้นสุด", "รายละเอียด"]],
-        use_container_width=True, num_rows="dynamic", key="calendar_editor"
-    )
-    if st.button("💾 ยืนยันการอัปเดตข้อมูลปฏิทินทั้งหมด", type="primary"):
-        # แปลงเวลากลับเป็น datetime เผื่อมีการแก้ไขในตารางดนตรี
-        edited_df["เริ่ม"] = pd.to_datetime(edited_df["เริ่ม"])
-        edited_df["สิ้นสุด"] = pd.to_datetime(edited_df["สิ้นสุด"])
-        st.session_state.task_schedule = edited_df
-        st.success("อัปเดตระบบปฏิทินเรียบร้อย!")
-        st.rerun()
+    fig_matrix.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10))
+    st.plotly_chart(fig_matrix, use_container_width=True)
+    
+    # --- 6. แผนภูมิ Gantt Chart สรุปงานเจาะลึกเฉพาะบุคคล (แสดงด้านล่างเมื่อมีการคลิกเลือกชื่อ) ---
+    st.markdown(f"#### 🔍 แผนภูมิ Gantt Chart ประจำสัปดาห์เฉพาะบุคคลของ: **{current_emp_name}**")
+    
+    # กรองเอาเฉพาะข้อมูลของคนที่คลิกจากเมนูด้านซ้ายมาวาดกราฟเส้นเวลา
+    personal_data = current_data[current_data["ชื่อพนักงาน"] == current_emp_name]
+    
+    if not personal_data.empty:
+        fig_gantt = px.timeline(
+            personal_data, x_start="เริ่ม", x_end="สิ้นสุด", y="กะ", color="Status",
+            color_discrete_map=STAGE_COLORS, hover_data=["หมวดหมู่", "รายละเอียด"],
+            title=f"ตารางงานและกะปฏิบัติงาน (Day / Mid / Night) ของ {current_emp_name}"
+        )
+        fig_gantt.update_yaxes(autorange="reversed")
+        fig_gantt.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=10))
+        st.plotly_chart(fig_gantt, use_container_width=True)
+    else:
+        st.info(f"💡 คุณ {current_emp_name} ยังไม่มีตารางงานหรือรายการลาถูกบันทึกในระบบในขณะนี้")
+        
+    # --- 7. ตารางจัดการแก้ไขข้อมูล ---
+    with st.expander("🛠️ ตารางแก้ไขหรือลบรายการดิบในระบบ"):
+        edited_df = st.data_editor(current_data[["ชื่อพนักงาน", "ทีม", "กะ", "ประเภท", "Status", "หมวดหมู่", "เริ่ม", "สิ้นสุด", "รายละเอียด"]], use_container_width=True, num_rows="dynamic")
+        if st.button("💾 ยืนยันข้อมูลที่มีการเปลี่ยนแปลง"):
+            edited_df["เริ่ม"] = pd.to_datetime(edited_df["เริ่ม"])
+            edited_df["สิ้นสุด"] = pd.to_datetime(edited_df["สิ้นสุด"])
+            st.session_state.task_schedule = edited_df
+            st.success("ข้อมูลปฏิทินอัปเดตเรียบร้อยแล้ว!")
+            st.rerun()
 else:
-    st.info("💡 ระบบกำลังรอข้อมูล กรุณาลงทะเบียนพนักงานและใส่แผนงานก่อนระบบจึงจะแสดงปฏิทินภาพรวมได้ครับ")
+    st.info("ระบบยังไม่มีข้อมูลแผนงานโปรดใส่ข้อมูลเพื่อทดสอบการใช้งาน")
