@@ -8,14 +8,14 @@ from datetime import datetime, date, time
 st.set_page_config(page_title="Engineering Master Scheduler 3.0", layout="wide")
 
 st.title("📊 Engineering Master Scheduler Dashboard 3.0")
-st.markdown("### ระบบบริหารงานรายบุคคลและปฏิทินภาพรวมรายเดือน")
+st.markdown("### ระบบบริหารงานรายบุคคลและปฏิทินภาพรวม")
 
 # --- 1. ข้อมูลโครงสร้างหลัก (Master Data) ---
 TEAMS = [
     "Production Team", "Cinema Engineer", "Pro-AV Engineer", 
-    "Post Production Engineer", "Broadcast Engineer", "Residential Engineer"
+    "Post Production Engineer", "Broadcast Engineer", "Center Engineer", "Residential Engineer"
 ]
-PROJECT_STAGES = ["P0: Pitch/Brainstorm", "P1: Build up/Present", "P2: Installation", "P3: After Sales/MA"]
+PROJECT_STAGES = ["P0: Pitch/Brainstorm", "P1: Build up/Present", "P2: Installation", "P3: After Sales/Service/MA"]
 LEAVE_CODES = ["PL: ลากิจ", "VL: ลาพักร้อน", "SL: ลาป่วย", "LVP: ลาไม่รับค่าจ้าง"]
 
 STAGE_COLORS = {
@@ -27,9 +27,35 @@ STAGE_COLORS = {
 # ฐานข้อมูลรายชื่อพนักงาน
 if "employee_roster" not in st.session_state:
     st.session_state.employee_roster = pd.DataFrame([
-        {"ชื่อพนักงาน": "วิชาญ (Chan)", "ทีม": "Cinema Engineer"},
         {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Pro-AV Engineer"},
-        {"ชื่อพนักงาน": "กัลยกร (Namfon)", "ทีม": "Production Team"}
+        {"ชื่อพนักงาน": "วรวุฒิ (Wut)", "ทีม": "Pro-AV Engineer"}
+        {"ชื่อพนักงาน": "รณฤทธิ์ (Bank)", "ทีม": "Pro-AV Engineer"},
+        {"ชื่อพนักงาน": "ปารวี (Vee)", "ทีม": "Pro-AV Engineer"},
+        {"ชื่อพนักงาน": "วัชรากร (Golf)", "ทีม": "Pro-AV Engineer"},
+        
+        {"ชื่อพนักงาน": "เกียรติศักดิ์ (Tle)", "ทีม": "Post Production Engineer"},
+        {"ชื่อพนักงาน": "ชัยณรงค์ (Keng)", "ทีม": "Post Production Engineer"},
+        {"ชื่อพนักงาน": "ณัฐวรท (Boss)", "ทีม": "Post Production Engineer"}, 
+        
+        {"ชื่อพนักงาน": "บุญชอบ (Chob)", "ทีม": "Broadcast Engineer"},
+        {"ชื่อพนักงาน": "ปานกริช (Dan)", "ทีม": "Broadcast Engineer"},
+        {"ชื่อพนักงาน": "เดชา (De)", "ทีม": "Broadcast Engineer"},
+        {"ชื่อพนักงาน": "ภัทรจิตรา (Nook)", "ทีม": "Broadcast Engineer"},
+        
+        {"ชื่อพนักงาน": "เมธา (Jack)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ดนุภพ (Pai)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "สราวุธ (No)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "คทาเทพ  (์James)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "มลรัก (Aeh)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ศิริศักดิ์ (Oh)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ชัชวาลย์ (Diew)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "นิติธร (Fluke)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ทศพล (Tri)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ปรีชา (Aek)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ไพศาล (Mua)", "ทีม": "Center Engineer"},
+        
+        {"ชื่อพนักงาน": "ณัฐติพงษ์ (Tle)", "ทีม": "Residential Engineer"},
+        {"ชื่อพนักงาน": "วีรภัทร (Arm)", "ทีม": "Residential Engineer"},       
     ])
 
 # ฐานข้อมูลตารางงานและการลา
@@ -46,7 +72,7 @@ if "task_schedule" not in st.session_state:
 
 # --- 3. ส่วนแรก: ฟอร์มกรอกข้อมูลพนักงานใหม่ (หน้าแรก/ส่วนบน) ---
 st.markdown("---")
-with st.expander("👤 ขั้นตอนที่ 1: กรอกข้อมูลลงทะเบียนพนักงานใหม่", expanded=st.session_state.employee_roster.empty):
+with st.expander("👤 ขั้นตอนที่ 1: กรอกข้อมูลลงทะเบียนพนักงาน", expanded=st.session_state.employee_roster.empty):
     with st.form("employee_form", clear_on_submit=True):
         st.subheader("📝 ฟอร์มลงทะเบียนพนักงาน")
         c1, c2 = st.columns(2)
