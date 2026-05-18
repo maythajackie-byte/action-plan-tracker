@@ -128,6 +128,8 @@ with st.form("assignment_form", clear_on_submit=True):
     
     with col_f1:
         shift_choice = st.selectbox("กะเวลาการทำงาน:", ["Day", "Mid", "Night"])
+        task_title = st.text_input("ชื่องาน / หัวข้อการแจ้งลา:") # <-- เพิ่มช่องชื่องานตรงนี้
+        
         if "วางแผนงาน" in entry_type:
             task_detail = st.text_area("รายละเอียดเนื้อหางาน:")
             record_cat = "แผนงาน"
@@ -150,8 +152,8 @@ with st.form("assignment_form", clear_on_submit=True):
         end_t = st.time_input("เวลาสิ้นสุด:", time(18, 0), step=1800)
         
     if st.form_submit_button("💾 บันทึกลงปฏิทิน"):
-        if task_detail.strip() == "":
-            st.error("❌ กรุณากรอกรายละเอียดงานหรือเหตุผลก่อนส่งข้อมูล")
+        if task_detail.strip() == "" or task_title.strip() == "":
+            st.error("❌ กรุณากรอกชื่องานและรายละเอียดข้อมูลให้ครบถ้วน")
         else:
             new_record = {
                 "ชื่อพนักงาน": current_emp_name,
@@ -160,6 +162,7 @@ with st.form("assignment_form", clear_on_submit=True):
                 "ประเภท": record_cat,
                 "Status": status_code,
                 "หมวดหมู่": work_cat,
+                "ชื่องาน": task_title, # <-- ส่งค่าชื่องานเข้าสู่ระบบฐานข้อมูล
                 "รายละเอียด": task_detail,
                 "เริ่ม": datetime.combine(start_d, start_t),
                 "สิ้นสุด": datetime.combine(end_d, end_t)
@@ -171,13 +174,14 @@ with st.form("assignment_form", clear_on_submit=True):
 st.divider()
 
 # =========================================================
-# ฟังก์ชันแปลงข้อมูล Pandas เป็น Event Format สำหรับปฏิทิน
+# ฟังก์ชันแปลงข้อมูลสำหรับการดึงขยายโครงสร้าง Pop-up รายละเอียดงาน
 # =========================================================
 def df_to_calendar_events(df):
     events = []
     for _, row in df.iterrows():
-        # แสดงชื่อ Status และชื่อคนบนป้ายปฏิทิน
-        title = f"{row['Status']} - {row['ชื่อพนักงาน']}"
+        # ดึง "ชื่องาน" มาแสดงผลในแถบปฏิทินโดยตรง
+        task_name = row.get('ชื่องาน', 'ไม่มีชื่องาน')
+        title = f"[{row['Status']}] {row['ชื่อพนักงาน']} - {task_name}"
         bg_color = STAGE_COLORS.get(row['Status'], "#333333")
         
         events.append({
@@ -186,9 +190,15 @@ def df_to_calendar_events(df):
             "end": row["สิ้นสุด"].strftime("%Y-%m-%dT%H:%M:%S"),
             "backgroundColor": bg_color,
             "borderColor": bg_color,
-            # ข้อมูลเหล่านี้จะแสดงเมื่อคลิก (Pop-up)
             "extendedProps": {
-                "description": f"รายละเอียด: {row['รายละเอียด']} | กะ: {row['กะ']}"
+                "empName": row['ชื่อพนักงาน'],
+                "teamName": row['ทีม'],
+                "shift": row['กะ'],
+                "category": row['หมวดหมู่'],
+                "status": row['Status'],
+                "taskName": task_name,
+                "details": row['รายละเอียด'],
+                "timeStr": f"{row['เริ่ม'].strftime('%H:%M')} - {row['สิ้นสุด'].strftime('%H:%M')}"
             }
         })
     return events
@@ -281,3 +291,41 @@ if not current_data.empty:
             st.rerun()
 else:
     st.info("ระบบกำลังรอข้อมูลเริ่มต้น...")
+    # =========================================================
+    # 📝 เมนูฟอร์มแก้ไขข้อมูลภารกิจเดิม (Edit Menu Form)
+    # =========================================================
+    st.markdown("---")
+    with st.expander("✏️ เมนูฟอร์มแก้ไขข้อมูลแผนงาน/การลาเดิม"):
+        if not current_data.empty:
+            # สร้างรายการตัวเลือกงานดึงจากดัชนีของข้อมูล
+            current_data['Edit_Label'] = current_data.index.astype(str) + " : [" + current_data['ชื่อพนักงาน'] + "] " + current_data.get('ชื่องาน', current_data['รายละเอียด']).str.slice(0, 30)
+            selected_edit_label = st.selectbox("เลือกรายการงานที่ต้องการปรับปรุงแก้ไข:", current_data['Edit_Label'].unique())
+            
+            edit_idx = int(selected_edit_label.split(" : ")[0])
+            edit_row = current_data.loc[edit_idx]
+            
+            st.markdown(f"**กำลังแก้ไขรายการของ:** {edit_row['ชื่อพนักงาน']} ({edit_row['ทีม']})")
+            
+            with st.form("edit_data_form"):
+                ec1, ec2, ec3 = st.columns(3)
+                with ec1:
+                    e_title = st.text_input("แก้ไขชื่องาน/หัวข้อการลา:", value=edit_row.get('ชื่องาน', ''))
+                    e_shift = st.selectbox("แก้ไขกะทำงาน:", ["Day", "Mid", "Night"], index=["Day", "Mid", "Night"].index(edit_row['กะ']))
+                with ec2:
+                    e_status = st.selectbox("แก้ไขโค้ดสถานะ (พิมพ์เฉพาะรหัสย่อ เช่น P0, P2, VL):", list(STAGE_COLORS.keys()), index=list(STAGE_COLORS.keys()).index(edit_row['Status']))
+                    e_detail = st.text_area("แก้ไขเนื้อหารายละเอียดงาน/เหตุผล:", value=edit_row['รายละเอียด'])
+                with ec3:
+                    # ดึงวันที่และเวลาเดิมมาตั้งต้น
+                    e_start = st.date_input("แก้ไขวันเริ่มต้น:", value=pd.to_datetime(edit_row['เริ่ม']).date())
+                    e_end = st.date_input("แก้ไขวันสิ้นสุด:", value=pd.to_datetime(edit_row['สิ้นสุด']).date())
+                
+                if st.form_submit_button("💾 บันทึกการอัปเดตข้อมูลปรับปรุง"):
+                    st.session_state.task_schedule.at[edit_idx, 'ชื่องาน'] = e_title
+                    st.session_state.task_schedule.at[edit_idx, 'กะ'] = e_shift
+                    st.session_state.task_schedule.at[edit_idx, 'Status'] = e_status
+                    st.session_state.task_schedule.at[edit_idx, 'รายละเอียด'] = e_detail
+                    st.session_state.task_schedule.at[edit_idx, 'เริ่ม'] = pd.to_datetime(e_start)
+                    st.session_state.task_schedule.at[edit_idx, 'สิ้นสุด'] = pd.to_datetime(e_end)
+                    
+                    st.success("🎉 อัปเดตการแก้ไขข้อมูลไปยังปฏิทินกลางเรียบร้อยแล้ว!")
+                    st.rerun()
