@@ -128,7 +128,7 @@ with st.form("assignment_form", clear_on_submit=True):
     
     with col_f1:
         shift_choice = st.selectbox("กะเวลาการทำงาน:", ["Day", "Mid", "Night"])
-        task_title = st.text_input("ชื่องาน / หัวข้อการแจ้งลา:") # <-- เพิ่มช่องชื่องานตรงนี้
+        task_title = st.text_input("ชื่องาน:") # <-- เพิ่มช่องชื่องานตรงนี้
         
         if "วางแผนงาน" in entry_type:
             task_detail = st.text_area("รายละเอียดเนื้อหางาน:")
