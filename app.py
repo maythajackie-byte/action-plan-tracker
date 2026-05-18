@@ -203,19 +203,20 @@ def df_to_calendar_events(df):
         })
     return events
 
-# กำหนดตัวเลือกของปฏิทิน (ตั้งค่า UI ปฏิทิน)
+# =========================================================
+# รูปแบบคำสั่งการตั้งค่าการทำงานของหน้าต่างปฏิทิน
+# =========================================================
 calendar_options = {
     "initialView": "dayGridMonth",
-    "initialDate": "2026-05-01",  # ซูมไปที่พฤษภาคม 2026 อัตโนมัติ
-    "firstDay": 0,                # 0 = เริ่มวันอาทิตย์ (Sunday First)
-    "displayEventTime": False,   # <--- เพิ่มบรรทัดนี้เพื่อซ่อนเวลา 9a / 3p
+    "initialDate": "2026-05-01",
+    "firstDay": 0,  
+    "displayEventTime": False,
     "headerToolbar": {
         "left": "today prev,next",
         "center": "title",
         "right": "dayGridMonth,timeGridWeek"
-        
     },
-    "eventClick": "function(info) { alert('📅 ผู้รับผิดชอบ: ' + info.event.title + '\\n\\n' + info.event.extendedProps.description); }",
+    # (ลบ eventClick เดิมออก เพื่อเปลี่ยนมาใช้กล่องข้อความ Popup บนเว็บแทน)
     "slotMinTime": "06:00:00",
     "slotMaxTime": "24:00:00"
 }
@@ -233,25 +234,36 @@ if not current_data.empty:
     
     st.markdown("---")
     
-    # =========================================================
-    # 🔍 ปฏิทินเฉพาะบุคคล (Personal Calendar) 
-    # =========================================================
-    st.subheader(f"👤 ปฏิทินตารางเวลาเฉพาะบุคคลของ: **{current_emp_name}**")
-    personal_data = current_data[current_data["ชื่อพนักงาน"] == current_emp_name]
-    
-    if not personal_data.empty:
-        personal_events = df_to_calendar_events(personal_data)
-        # ใช้ timeGridWeek เพื่อดูตารางสอน/ตารางงานของคนคนนั้นแบบละเอียดเป็นรายชั่วโมงได้
-        personal_cal_options = calendar_options.copy()
-        personal_cal_options["initialView"] = "timeGridWeek" 
-        
-        calendar(events=personal_events, options=personal_cal_options, key="personal_calendar")
-    else:
-        st.info(f"💡 คุณ {current_emp_name} ยังไม่มีข้อมูลในระบบ")
+ # =========================================================
+# 🗓️ ส่วนแสดงผลปฏิทินภาพรวม (All Staff) และ ส่วนบุคคล (Personal Roster)
+# =========================================================
+st.subheader("🗓️ ขั้นตอนที่ 3: ปฏิทินภาพรวมและแผนภูมิสรุปรายบุคคลประจำเดือน")
 
-    # =========================================================
-    # 💾 ระบบ Export ข้อมูล และ แก้ไขข้อมูล
-    # =========================================================
+if not current_data.empty:
+    # 3.1 แสดงหน้าต่างปฏิทินรวมพนักงานทั้งหมดก่อน
+    st.markdown("#### 📅 ปฏิทินกลางสำหรับตรวจสอบทรัพยากรพนักงานทั้งหมด (All Staff Calendar)")
+    all_events = df_to_calendar_events(current_data)
+    
+    # กำหนดตัวแปร cal_result เพื่อรอรับค่าเมื่อผู้ใช้งานคลิกแถบสีบนปฏิทิน
+    cal_result = calendar(events=all_events, options=calendar_options, key="main_calendar_view")
+    
+    # --- 🟢 เพิ่มระบบ Popup เด้งกล่องรายละเอียดเมื่องานถูกคลิก ---
+    if cal_result.get("eventClick"):
+        event_data = cal_result["eventClick"]["event"]
+        props = event_data.get("extendedProps", {})
+        
+        # ใช้ container สร้างกรอบเหมือน Popup เน้นข้อความโดดเด่น
+        with st.container(border=True): 
+            st.markdown(f"### 📋 รายละเอียด: {event_data.get('title', 'ไม่มีชื่องาน')}")
+            pc1, pc2 = st.columns(2)
+            with pc1:
+                st.write(f"**👤 พนักงาน:** {props.get('empName', '-')} ({props.get('teamName', '-')})")
+                st.write(f"**⏰ เวลาปฏิบัติงาน:** {props.get('timeStr', '-')} [กะ: {props.get('shift', '-')}]")
+            with pc2:
+                st.write(f"**🏷️ หมวดหมู่:** {props.get('status', '-')} | {props.get('category', '-')}")
+            
+            st.info(f"**📝 รายละเอียดเนื้อหางาน/เหตุผลการลา:**\n\n{props.get('details', 'ไม่มีรายละเอียดเพิ่มเติม')}")
+            
     st.markdown("---")
     st.subheader("🛠️ จัดการข้อมูลดิบ & นำออกไฟล์ (Export)")
     
