@@ -88,7 +88,7 @@ if "employee_roster" not in st.session_state:
         {"ชื่อพนักงาน": "ยุรนันทน์ (Bird)", "ทีม": "Production Team"},
         {"ชื่อพนักงาน": "ณรงค์ฤทธิ์ (Rit)", "ทีม": "Production Team"},
         {"ชื่อพนักงาน": "ทักษ์ดนัย (Nai)", "ทีม": "Production Team"},
-        {"ชื่อพนักงาน": "พีรศักดิ์ (Foam)", "ทีม": "Production Team"},       
+        {"ชื่อพนักงาน": "พีระศักดิ์ (Foam)", "ทีม": "Production Team"},       
         {"ชื่อพนักงาน": "ชัยวุฒิ (Pump)", "ทีม": "Production Team"},         
 
     ])
