@@ -22,10 +22,10 @@ TASK_CATEGORIES = [
     "Project (Bangkok)", "Project (Outside Bangkok)", "Project (Oversea)",
     "Training (In-house)", "Training (Outside)",
     "Production (Project)", "Production (Other)",
-    "Event/Show", "Others"
+    "Event/Show", "R&D", "Others"
 ]
 
-PROJECT_STAGES = ["P0: Pitch/Brainstorm", "P1: Build up/Present", "P2: Installation", "P3: After Sales/Service/MA"]
+PROJECT_STAGES = ["P0:", "P1:", "P2:", "P3:", "Others"]
 LEAVE_OPTIONS = ["PL: ลากิจ (Personal Leave)", "VL: ลาพักร้อน (Vacation Leave)", "SL: ลาป่วย (Sick Leave)", "LVP: ลาไม่รับค่าจ้าง (Leave Without Pay)"]
 
 STAGE_COLORS = {
