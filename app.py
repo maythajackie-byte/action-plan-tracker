@@ -13,7 +13,7 @@ st.markdown("### ระบบบริหารแผนงานประจำ
 # --- [ข้อมูลโครงสร้างหลัก - Master Data] ---
 TEAMS = [
     "Production Team", "Cinema Engineer", "Pro-AV Engineer", 
-    "Post Production Engineer", "Broadcast Engineer", "Residential Engineer"
+    "Post Production Engineer", "Broadcast Engineer", "Residential Engineer", "Center Engineer"
 ]
 
 TASK_CATEGORIES = [
@@ -22,7 +22,7 @@ TASK_CATEGORIES = [
     "Project (Bangkok)", "Project (Outside Bangkok)", "Project (Oversea)",
     "Training (In-house)", "Training (Outside)",
     "Production (Project)", "Production (Other)",
-    "Event/Show"
+    "Event/Show", "Others"
 ]
 
 PROJECT_STAGES = ["P0: Pitch/Brainstorm", "P1: Build up/Present", "P2: Installation", "P3: After Sales/Service/MA"]
@@ -36,17 +36,68 @@ STAGE_COLORS = {
 # --- [ระบบฐานข้อมูลชั่วคราว - Session State] ---
 if "employee_roster" not in st.session_state:
     st.session_state.employee_roster = pd.DataFrame([
-        {"ชื่อพนักงาน": "วิชาญ (Chan)", "ทีม": "Cinema Engineer"},
-        {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Broadcast Engineer"},
-        {"ชื่อพนักงาน": "กัลยกร (Namfon)", "ทีม": "Production Team"},
-        {"ชื่อพนักงาน": "เอกวุฒิ (Tum)", "ทีม": "Residential Engineer"}
+ {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Pro-AV Engineer"},
+        {"ชื่อพนักงาน": "วรวุฒิ (Wut)", "ทีม": "Pro-AV Engineer"},
+        {"ชื่อพนักงาน": "รณฤทธิ์ (Bank)", "ทีม": "Pro-AV Engineer"},
+        {"ชื่อพนักงาน": "ปารวี (Vee)", "ทีม": "Pro-AV Engineer"},
+        {"ชื่อพนักงาน": "วัชรากร (Golf)", "ทีม": "Pro-AV Engineer"},
+        
+        {"ชื่อพนักงาน": "เกียรติศักดิ์ (Tle)", "ทีม": "Post Production Engineer"},
+        {"ชื่อพนักงาน": "ชัยณรงค์ (Keng)", "ทีม": "Post Production Engineer"},
+        {"ชื่อพนักงาน": "ณัฐวรท (Boss)", "ทีม": "Post Production Engineer"}, 
+        
+        {"ชื่อพนักงาน": "บุญชอบ (Chob)", "ทีม": "Broadcast Engineer"},
+        {"ชื่อพนักงาน": "ปานกริช (Dan)", "ทีม": "Broadcast Engineer"},
+        {"ชื่อพนักงาน": "เดชา (De)", "ทีม": "Broadcast Engineer"},
+        {"ชื่อพนักงาน": "ภัทรจิตรา (Nook)", "ทีม": "Broadcast Engineer"},
+        
+        {"ชื่อพนักงาน": "เมธา (Jack)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ดนุภพ (Pai)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "สราวุธ (No)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "คทาเทพ  (์James)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "มลรัก (Aeh)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ศิริศักดิ์ (Oh)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ชัชวาลย์ (Diew)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "นิติธร (Fluke)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ทศพล (Tri)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ปรีชา (Aek)", "ทีม": "Center Engineer"},
+        {"ชื่อพนักงาน": "ไพศาล (Mua)", "ทีม": "Center Engineer"},
+        
+        {"ชื่อพนักงาน": "ณัฐติพงษ์ (Tle)", "ทีม": "Residential Engineer"},
+        {"ชื่อพนักงาน": "วีรภัทร (Arm)", "ทีม": "Residential Engineer"},
+       
+        {"ชื่อพนักงาน": "บาตท์ โฮ  (Bart)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "วิชาญ  (Chan)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "กิตติศักดิ์   (Tu)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "อิทธิรัตน์  (Koh)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "เอกวุฒิ  (Tum)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "อภิชาติ  (Tum)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "ยศิธร  (Van)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "ศิวัช   (Champ)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "ณัฐพล  (Nui)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "ชาติสยาม (ญนนท)", "ทีม": "Cinema Engineer"},
+        {"ชื่อพนักงาน": "ณัฐดุสิต  (Mint)", "ทีม": "Cinema Engineer"}, 
+        {"ชื่อพนักงาน": "คเชนทร์   (Tae)", "ทีม": "Cinema Engineer"},
+
+        {"ชื่อพนักงาน": "นิรุตต์ (Rut)", "ทีม": "Cinema Engineer"},
+
+        {"ชื่อพนักงาน": "อดิเรก   (Rek)", "ทีม": "Production Team"},
+        {"ชื่อพนักงาน": "วรทัศน์   (Awun)", "ทีม": "Production Team"},
+        {"ชื่อพนักงาน": "ชำนาญ   (Pui)", "ทีม": "Production Team"},
+        {"ชื่อพนักงาน": "ซอ ยาว (Saw Yawr)", "ทีม": "Production Team"},
+        {"ชื่อพนักงาน": "ยุรนันทน์ (Bird)", "ทีม": "Production Team"},
+        {"ชื่อพนักงาน": "ณรงค์ฤทธิ์ (Rit)", "ทีม": "Production Team"},
+        {"ชื่อพนักงาน": "ทักษ์ดนัย (Nai)", "ทีม": "Production Team"},
+        {"ชื่อพนักงาน": "พีรศักดิ์ (Foam)", "ทีม": "Production Team"},       
+        {"ชื่อพนักงาน": "ชัยวุฒิ (Pump)", "ทีม": "Production Team"},         
+
     ])
 
 if "task_schedule" not in st.session_state:
     init_tasks = [
-        {"ชื่อพนักงาน": "วิชาญ (Chan)", "ทีม": "Cinema Engineer", "กะ": "Day", "ประเภท": "แผนงาน", "Status": "P2", "หมวดหมู่": "Project (Bangkok)", "ชื่องาน": "ติดตั้งระบบภาพ", "รายละเอียด": "ติดตั้งระบบภาพ SFW Hall 15", "เริ่ม": "2026-05-18 09:00", "สิ้นสุด": "2026-05-20 18:00"},
-        {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Broadcast Engineer", "กะ": "Day", "ประเภท": "การลา", "Status": "VL", "หมวดหมู่": "ลาพักร้อน", "ชื่องาน": "แจ้งลาพักร้อน", "รายละเอียด": "พักร้อนประจำปี", "เริ่ม": "2026-05-13 09:00", "สิ้นสุด": "2026-05-15 18:00"},
-        {"ชื่อพนักงาน": "กัลยกร (Namfon)", "ทีม": "Production Team", "กะ": "Mid", "ประเภท": "แผนงาน", "Status": "P0", "หมวดหมู่": "Production (Project)", "ชื่องาน": "Brainstorm Stage", "รายละเอียด": "ประชุมทีมโปรเจกต์ใหม่", "เริ่ม": "2026-05-18 15:00", "สิ้นสุด": "2026-05-18 23:00"}
+        #{"ชื่อพนักงาน": "วิชาญ (Chan)", "ทีม": "Cinema Engineer", "กะ": "Day", "ประเภท": "แผนงาน", "Status": "P2", "หมวดหมู่": "Project (Bangkok)", "ชื่องาน": "ติดตั้งระบบภาพ", "รายละเอียด": "ติดตั้งระบบภาพ SFW Hall 15", "เริ่ม": "2026-05-18 09:00", "สิ้นสุด": "2026-05-20 18:00"},
+        {"ชื่อพนักงาน": "ฉัตรชัย (Dy)", "ทีม": "Pro-AV Engineer", "กะ": "Day", "ประเภท": "การลา", "Status": "VL", "หมวดหมู่": "ลาพักร้อน", "ชื่องาน": "แจ้งลาพักร้อน", "รายละเอียด": "พักร้อนประจำปี", "เริ่ม": "2026-05-13 09:00", "สิ้นสุด": "2026-05-15 18:00"},
+        #{"ชื่อพนักงาน": "กัลยกร (Namfon)", "ทีม": "Production Team", "กะ": "Mid", "ประเภท": "แผนงาน", "Status": "P0", "หมวดหมู่": "Production (Project)", "ชื่องาน": "Brainstorm Stage", "รายละเอียด": "ประชุมทีมโปรเจกต์ใหม่", "เริ่ม": "2026-05-18 15:00", "สิ้นสุด": "2026-05-18 23:00"}
     ]
     df_tasks = pd.DataFrame(init_tasks)
     df_tasks["เริ่ม"] = pd.to_datetime(df_tasks["เริ่ม"])
