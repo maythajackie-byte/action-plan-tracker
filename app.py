@@ -88,7 +88,7 @@ with tab3:
                 <div class="eng-stat">💼 งานทั้งหมด: <b>{job_count} Jobs</b></div>
                 <div class="eng-stat">🏖️ ลาหยุด: <b>{leave_count} ครั้ง</b></div>
             </div>
-            """, unsafe_allow_html=True)
+            """, unsafe_allow_html=(True)
 
 # =====================================================================
 # 📑 ส่วนที่ 4: การสร้างระบบนำทาง (Tabs Layout)
