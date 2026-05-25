@@ -67,12 +67,13 @@ current_data = st.session_state.task_schedule
 # ---------------------------------------------------------------------
 with tab3:
     st.markdown("### 👷 Engineer Workload Overview")
-    st.caption("สรุปปริมาณงานและการลาของช่างแต่ละท่าน")
+    st.caption("สรุปปริมาณงานและการลาของช่างแต่ละท่าน (คล้ายดีไซน์ HTML)")
     
     # สร้างการ์ดแสดงข้อมูลของช่างแต่ละคนโดยใช้ st.columns
     cols = st.columns(4)
     for i, emp in enumerate(st.session_state.employee_roster["ชื่อพนักงาน"].unique()):
-        # คำนวณจำนวนงานและการลา (บรรทัดที่เกิด Error ได้ถูกเติมให้สมบูรณ์แล้ว)
+        
+        # คำนวณจำนวนงานและการลา (บรรทัดนี้ต้องยาวจนสุด)
         emp_jobs = current_data[(current_data["ชื่อพนักงาน"] == emp) & (current_data["ประเภท"] == "แผนงาน")]
         emp_leaves = current_data[(current_data["ชื่อพนักงาน"] == emp) & (current_data["ประเภท"] == "การลา")]
         
@@ -80,7 +81,7 @@ with tab3:
         leave_count = len(emp_leaves)
         
         with cols[i % 4]: # จัดเรียงใส่คอลัมน์
-            # ใช้ HTML เพื่อเลียนแบบกล่องการ์ด
+            # ใช้ HTML เพื่อเลียนแบบกล่องการ์ดสวยๆ
             st.markdown(f"""
             <div class="eng-card">
                 <div class="eng-name">{emp}</div>
