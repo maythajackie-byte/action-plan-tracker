@@ -12,12 +12,12 @@ st.set_page_config(page_title="Engineer Workload Tracker", layout="wide", page_i
 
 st.markdown("""
 <style>
-    .stApp { background-color: #f4f6f9; }
-    h1, h2, h3 { color: #2c3e50; font-family: 'Segoe UI', sans-serif; }
-    .streamlit-expanderHeader { background-color: #ffffff; border-radius: 8px; font-weight: bold; color: #f5a623; }
-    .eng-card { background-color: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); border-top: 4px solid #3498db; margin-bottom: 15px; }
-    .eng-name { font-size: 16px; font-weight: bold; color: #2c3e50; }
-    .eng-stat { font-size: 13px; color: #7f8c8d; margin-top: 5px; }
+    /* พื้นหลังสีขาวเทาอ่อน, ตัวอักษรสีเข้ม */
+    .stApp { background-color: #f8f9fa; }
+    h1, h2, h3 { color: #1e293b; }
+    
+    /* กล่องการ์ดปรับเป็นสีขาวขอบเทา */
+    .eng-card { background-color: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 4px solid #3498db; margin-bottom: 15px; }
 </style>
 """, unsafe_allow_html=True)
 
