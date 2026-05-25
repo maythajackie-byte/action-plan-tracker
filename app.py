@@ -62,30 +62,32 @@ if "task_schedule" not in st.session_state:
 roster_df = st.session_state.employee_roster
 current_data = st.session_state.task_schedule
 
-# =====================================================================
-# 🛠️ ส่วนที่ 3: ฟังก์ชันตัวช่วยต่างๆ (Helper Functions)
-# =====================================================================
-def get_calendar_events(df):
-    """ฟังก์ชันแปลงข้อมูล DataFrame เป็นรูปแบบที่ปฏิทินอ่านได้"""
-    events = []
-    for _, row in df.iterrows():
-        task_name = row.get('ชื่องาน', 'ไม่มีชื่องาน')
-        title = f"[{row['Status']}] {row['ชื่อพนักงาน']} - {task_name}"
-        bg_color = STAGE_COLORS.get(row['Status'], "#333333")
-        events.append({
-            "title": title,
-            "start": row["เริ่ม"].strftime("%Y-%m-%dT%H:%M:%S"),
-            "end": row["สิ้นสุด"].strftime("%Y-%m-%dT%H:%M:%S"),
-            "backgroundColor": bg_color,
-            "borderColor": bg_color,
-            "extendedProps": {
-                "empName": row['ชื่อพนักงาน'], "teamName": row['ทีม'],
-                "shift": row['กะ'], "category": row['หมวดหมู่'], "status": row['Status'],
-                "details": row['รายละเอียด'],
-                "timeStr": f"{row['เริ่ม'].strftime('%H:%M')} - {row['สิ้นสุด'].strftime('%H:%M')}"
-            }
-        })
-    return events
+# ---------------------------------------------------------------------
+# แท็บ 3: ข้อมูลช่างและประสิทธิภาพ (Capacity & Workload)
+# ---------------------------------------------------------------------
+with tab3:
+    st.markdown("### 👷 Engineer Workload Overview")
+    st.caption("สรุปปริมาณงานและการลาของช่างแต่ละท่าน")
+    
+    # สร้างการ์ดแสดงข้อมูลของช่างแต่ละคนโดยใช้ st.columns
+    cols = st.columns(4)
+    for i, emp in enumerate(st.session_state.employee_roster["ชื่อพนักงาน"].unique()):
+        # คำนวณจำนวนงานและการลา (บรรทัดที่เกิด Error ได้ถูกเติมให้สมบูรณ์แล้ว)
+        emp_jobs = current_data[(current_data["ชื่อพนักงาน"] == emp) & (current_data["ประเภท"] == "แผนงาน")]
+        emp_leaves = current_data[(current_data["ชื่อพนักงาน"] == emp) & (current_data["ประเภท"] == "การลา")]
+        
+        job_count = len(emp_jobs)
+        leave_count = len(emp_leaves)
+        
+        with cols[i % 4]: # จัดเรียงใส่คอลัมน์
+            # ใช้ HTML เพื่อเลียนแบบกล่องการ์ด
+            st.markdown(f"""
+            <div class="eng-card">
+                <div class="eng-name">{emp}</div>
+                <div class="eng-stat">💼 งานทั้งหมด: <b>{job_count} Jobs</b></div>
+                <div class="eng-stat">🏖️ ลาหยุด: <b>{leave_count} ครั้ง</b></div>
+            </div>
+            """, unsafe_allow_html=True)
 
 # =====================================================================
 # 📑 ส่วนที่ 4: การสร้างระบบนำทาง (Tabs Layout)
