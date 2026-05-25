@@ -24,7 +24,7 @@ with tab1:
         job = col2.text_input("ชื่องาน:")
         s_d = st.date_input("เริ่ม:")
         e_d = st.date_input("สิ้นสุด:")
-        stage = st.selectbox("Stage:", ["P0", "P1", "P2", "P3"])
+        stage = st.selectbox("Stage:", ["P0", "P1", "P2", "P3", "Others"])
         desc = st.text_area("รายละเอียด:")
         if st.form_submit_button("บันทึก"):
             new_row = pd.DataFrame([{"ชื่อพนักงาน": emp, "ชื่องาน": job, "Status": stage, "เริ่ม": pd.to_datetime(s_d), "สิ้นสุด": pd.to_datetime(e_d), "รายละเอียด": desc}])
