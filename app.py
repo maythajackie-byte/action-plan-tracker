@@ -1,45 +1,56 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime, date
 
-# 1. การตั้งค่าหน้า Dashboard
-st.set_page_config(layout="wide")
-st.title("📋 Engineer Workload & Schedule Tracker")
+# ตั้งค่าหน้าจอ
+st.set_page_config(page_title="Engineer Workload Tracker", layout="wide")
 
-# 2. จำลองฐานข้อมูล (แนะนำ: ให้เชื่อมต่อ Google Sheets ในอนาคตเพื่อบันทึกถาวร)
+# CSS ตกแต่งให้เหมือนต้นฉบับ (สีเหลืองส้มและโครงสร้าง)
+st.markdown("""
+<style>
+    .stApp { background-color: #f4f6f9; }
+    .header { background: #f5a623; padding: 1rem; color: white; border-radius: 10px; margin-bottom: 20px; }
+    .eng-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+</style>
+""", unsafe_allow_html=True)
+
+# ส่วน Header เหมือนภาพต้นฉบับ
+st.markdown('<div class="header"><h1>📋 Engineer Workload Tracker</h1></div>', unsafe_allow_html=True)
+
+# ฐานข้อมูล (แนะนำให้เชื่อมต่อ Google Sheets ในขั้นตอนถัดไปเพื่อบันทึกถาวร)
 if "jobs" not in st.session_state:
-    st.session_state.jobs = pd.DataFrame(columns=["Customer", "Job Name", "PIC", "Status", "Start", "End"])
+    st.session_state.jobs = pd.DataFrame(columns=["Customer", "Job Name", "Phase", "Status", "Start", "End"])
 
-# 3. จัดการ Tabs (ระบบนำทาง)
-tab1, tab2, tab3 = st.tabs(["📋 Jobs Table", "📅 Gantt Timeline", "⚙️ Manage"])
+# Tabs เหมือนในภาพ
+tab1, tab2, tab3, tab4 = st.tabs(["📋 Jobs & Forms", "📅 Timeline", "📊 Capacity", "📈 Report"])
 
 with tab1:
-    st.subheader("รายการงานทั้งหมด")
-    st.data_editor(st.session_state.jobs, use_container_width=True, num_rows="dynamic")
+    st.subheader("➕ เพิ่มงานหรือการลาใหม่")
+    with st.form("job_form", clear_on_submit=True):
+        c1, c2, c3 = st.columns(3)
+        cust = c1.text_input("Customer")
+        job = c2.text_input("Job / Project Name")
+        phase = c3.selectbox("Phase", ["P0", "P1", "P2", "P3"])
+        
+        s_date = c1.date_input("Start Date")
+        e_date = c2.date_input("End Date")
+        status = c3.selectbox("Status", ["On-going", "Complete", "Pending"])
+        
+        if st.form_submit_button("💾 บันทึก"):
+            new_row = pd.DataFrame([{"Customer": cust, "Job Name": job, "Phase": phase, "Status": status, "Start": s_date, "End": e_date}])
+            st.session_state.jobs = pd.concat([st.session_state.jobs, new_row], ignore_index=True)
+            st.rerun()
+            
+    st.dataframe(st.session_state.jobs, use_container_width=True)
 
 with tab2:
-    st.subheader("📅 ไทม์ไลน์งาน")
-    if not st.session_state.jobs.empty:
-        # แสดง Timeline Chart
-        fig = st.bar_chart(st.session_state.jobs, x="Job Name", y=["Start", "End"])
-    else:
-        st.info("ยังไม่มีข้อมูลงาน")
+    st.subheader("📅 Timeline")
+    # ใส่ระบบปฏิทินที่นี่
 
 with tab3:
-    st.subheader("➕ เพิ่ม/แก้ไขข้อมูลงาน")
-    with st.form("add_job"):
-        cust = st.text_input("Customer")
-        job = st.text_input("Job Name")
-        pic = st.text_input("PIC")
-        status = st.selectbox("Status", ["On-going", "Complete", "Pending"])
-        s_date = st.date_input("Start Date")
-        e_date = st.date_input("End Date")
-        if st.form_submit_button("บันทึกงาน"):
-            new_job = pd.DataFrame([{"Customer": cust, "Job Name": job, "PIC": pic, "Status": status, "Start": s_date, "End": e_date}])
-            st.session_state.jobs = pd.concat([st.session_state.jobs, new_job], ignore_index=True)
-            st.rerun()
+    st.subheader("📊 Capacity")
+    # ใส่ตารางสรุปงานช่างที่นี่
 
-# 4. ปุ่ม Export (ส่วนนี้ทำงานได้ใน Streamlit)
-if st.button("📥 Download Excel"):
-    output = io.BytesIO()
-    st.session_state.jobs.to_excel(output, index=False)
-    st.download_button("คลิกเพื่อโหลด", data=output.getvalue(), file_name="Workload.xlsx")
+with tab4:
+    st.subheader("📈 Report")
+    # ใส่ Report ที่นี่
